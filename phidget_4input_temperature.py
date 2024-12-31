@@ -11,17 +11,17 @@ class Phidget22TemperatureSensor:
 
     def set_thermocouple_type(self, thermocouple_type):
         self.ch.setThermocoupleType(thermocouple_type)
-        print(f"Setting Thermocouple Type to {thermocouple_type}...")
+        # print(f"Setting Thermocouple Type to {thermocouple_type}...")
 
     def get_thermocouple_type(self):
         thermocouple_type = self.ch.getThermocoupleType()
-        print(f"Thermocouple Type: {thermocouple_type}")
+        # print(f"Thermocouple Type: {thermocouple_type}")
         return thermocouple_type
 
     
     def get_temperature(self):
         temperature = self.ch.getTemperature()
-        print(f"Temperature: {temperature}")
+        # print(f"Temperature: {temperature}")
         return temperature
     
     def close(self):

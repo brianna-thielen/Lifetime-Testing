@@ -34,16 +34,16 @@ class LCX100:
         """
         self.lcx = RsInstrument(address)
         idn = self.lcx.query_str("*IDN?")
-        print("-" * 100)
-        print(f"RsInstrument driver version: {self.lcx.driver_version}")
-        print(f"Visa manufacturer: {self.lcx.visa_manufacturer}")
-        print(f"LCR Instrument ID: '{idn}'")
-        print(f"LCR Instrument full name: {self.lcx.full_instrument_model_name}")
-        print(
-            f'LCR Instrument installed options: {",".join(self.lcx.instrument_options)}'
-        )
-        print(f"LCR Instrument Connection Status: {self.lcx.is_connection_active()}")
-        print("-" * 100)
+        # print("-" * 100)
+        # print(f"RsInstrument driver version: {self.lcx.driver_version}")
+        # print(f"Visa manufacturer: {self.lcx.visa_manufacturer}")
+        # print(f"LCR Instrument ID: '{idn}'")
+        # print(f"LCR Instrument full name: {self.lcx.full_instrument_model_name}")
+        # print(
+        #     f'LCR Instrument installed options: {",".join(self.lcx.instrument_options)}'
+        # )
+        # print(f"LCR Instrument Connection Status: {self.lcx.is_connection_active()}")
+        # print("-" * 100)
 
     def reset(self):
         """
@@ -76,7 +76,7 @@ class LCX100:
             None
         """
         self.lcx.write(f"APER {aperture}")
-        print(f"Setting LCR aperture to {aperture}...")
+        # print(f"Setting LCR aperture to {aperture}...")
 
     def set_visa_timeout(self, timeout):
         """
@@ -89,7 +89,7 @@ class LCX100:
             None
         """
         self.lcx.visa_timeout = timeout
-        print(f"Setting LCR VISA timeout to {timeout} ms...")
+        # print(f"Setting LCR VISA timeout to {timeout} ms...")
 
     def set_measurement_type(self, measurement_type):
         """
@@ -102,7 +102,7 @@ class LCX100:
             None
         """
         self.lcx.write(f"FUNC:MEAS:TYPE {measurement_type}")
-        print(f"Setting LCR measurement type to {measurement_type}...")
+        # print(f"Setting LCR measurement type to {measurement_type}...")
 
     def set_measurement_range(self, measurement_range):
         """
@@ -115,7 +115,7 @@ class LCX100:
             None
         """
         self.lcx.write(f"FUNC:IMP:RANG {measurement_range}")
-        print(f"Setting LCR measurement range to {measurement_range}...")
+        # print(f"Setting LCR measurement range to {measurement_range}...")
 
     def reset_and_initialize(self):
         """
@@ -138,7 +138,7 @@ class LCX100:
             None
         """
         self.lcx.write(f"VOLT {voltage}")
-        print(f"Setting LCR voltage to {voltage} V")
+        # print(f"Setting LCR voltage to {voltage} V")
 
     def set_frequency(self, frequency):
         """
@@ -151,7 +151,7 @@ class LCX100:
             None
         """
         self.lcx.write(f"FREQ {frequency} Hz")
-        print(f"Setting LCR frequency to {frequency} Hz")
+        # print(f"Setting LCR frequency to {frequency} Hz")
 
     def get_impedance(self):
         """
@@ -162,7 +162,7 @@ class LCX100:
         """
         response = self.lcx.query("READ:IMP?")
         impedance, phase_angle = response.split(",")
-        print(f"Impedance: {impedance} Ohms, Phase Angle: {phase_angle} degrees")
+        # print(f"Impedance: {impedance} Ohms, Phase Angle: {phase_angle} degrees")
         return impedance, phase_angle
 
     def close(self):
