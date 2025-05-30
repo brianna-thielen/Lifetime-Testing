@@ -1,35 +1,62 @@
+# Notes for changing interpreter
+# CTRL+SHIFT+P, Python: Select Interpreter, Python 3.12.4 ('base')
 import time
 import datetime
 import os
 import pandas as pd
 import statistics
 import numpy as np
+import requests
+import traceback
 
-from keithley_mux import KeithleyMUX as kmux
-from rs_lcx100 import LCX100 as lcx
-from intan_rhs import IntanRHS as intan
-from phidget_4input_temperature import Phidget22TemperatureSensor as phidget
+from equipment.keithley_mux import KeithleyMUX as kmux
+from equipment.rs_lcx100 import LCX100 as lcx
+from equipment.intan_rhs import IntanRHS as intan
+from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
+
+SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 IMPEDANCE_TEST_INTERVAL = datetime.timedelta(hours=12)
+IMPEDANCE_TEST_TIME = (8, 20) #tests at 8am and 8pm every day
 
 # SIROF SAMPLE CONSTANTS
 IMPEDANCE_CIC_FOLDER = "C:/Users/3DPrint-Integral/src/integral_npsw/Lifetime-Testing/data/coatings/intan-measurements/"
-BROKEN_ELECTRODES = ["IR07"]
+BROKEN_ELECTRODES = ["IR07", "PT01"]
+# SAMPLES = [
+#     "IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", 
+#     "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10"
+# ]
 SAMPLES = [
     "IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", 
-    "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10"
+    "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10",
+    "G1X1-1", "G1X1-2", "G3X3S-1", "G3X3S-2", "G2X2S-1", "G2X2S-2", "G2X2L-1", "G2X2L-2",
 ]
+# CHANNELS = [
+#     "d-024", "d-025", "d-026", "d-027", "d-011", "d-023", "d-022", "d-021", "d-020", "d-004",
+#     "d-028", "d-029", "d-030", "d-031", "d-015", "d-019", "d-018", "d-017", "d-016", "d-000"
+# ]
 CHANNELS = [
-    "a-024", "a-025", "a-026", "a-027", "a-011", "a-023", "a-022", "a-021", "a-020", "a-004",
-    "a-028", "a-029", "a-030", "a-031", "a-015", "a-019", "a-018", "a-017", "a-016", "a-000"
+    "d-024", "d-025", "d-026", "d-027", "d-007", "d-028", "d-029", "d-030", "d-031", "d-006",
+    "d-008", "d-009", "d-010", "d-011", "d-005", "d-012", "d-013", "d-014", "d-015", "d-004",
+    "d-023", "d-022", "d-021", "d-020", "d-019", "d-018", "d-017", "d-016", 
 ]
+# PULSE_AMPLITUDES = [
+#     600, 600, 600, 600, 0, 400, 400, 400, 400, 0,
+#     400, 400, 400, 400, 0, 200, 200, 200, 200, 0
+# ] # uA
+# PULSE_AMPLITUDES = [
+#     600, 600, 1800, 1800, 0, 400, 400, 1200, 1200, 0,
+#     400, 400, 1200, 1200, 0, 200, 200, 600, 600, 0
+# ] # uA - updated 1/10/25 11:16am
 PULSE_AMPLITUDES = [
-    600, 600, 600, 600, 0, 400, 400, 400, 400, 0,
-    400, 400, 400, 400, 0, 200, 200, 200, 200, 0
-] # uA
+    600, 600, 1800, 1800, 0, 400, 400, 1200, 1200, 0,
+    400, 400, 1200, 1200, 0, 200, 200, 600, 600, 0,
+    400, 400, 400, 400, 400, 400, 400, 400, 
+] # uA - updated 4/25/25 5:06pm to include LCP test samples
 GEOM_SURF_AREAS = [
     1.7272, 0.8103, 1.1716, 1.2028, 1.4268, 1.377, 0.594, 0.8375, 1.008, 1.2387,
-    3.2472, 2.1784, 2.0868, 2.3458, 2.0832, 2.6302, 2.1168, 1.7199, 1.607, 2.8304
+    3.2472, 2.1784, 2.0868, 2.3458, 2.0832, 2.6302, 2.1168, 1.7199, 1.607, 2.8304,
+    4, 4, 3.9204, 3.9204, 3.9601, 3.9601, 4, 4
 ] # mm^2
 SIROF_IMPEDANCE_THRESHOLD = 100000 # ohms
 
@@ -49,6 +76,11 @@ INITIAL_I_MAX = [
     1000, 1000, 1000, 1000, 500, 1000, 100, 1000, 1000, 500, 
     500, 500, 500, 500, 300, 500, 500, 100, 500, 300
 ] # uA
+INITIAL_I_MAX = [
+    527, 296, 2022, 1707, 1308, 243, 0, 392, 297, 180, 
+    0, 708, 114, 563, 621, 1062, 843, 1000, 1372, 1155, 
+    400, 400, 400, 400, 400, 400, 400, 400
+]
 VT_PULSE_FREQUENCY = 10 # Hz
 VT_PULSE_WIDTH = 1000 # us
 VT_INTERPHASE_DELAY = 500 # us
@@ -124,10 +156,8 @@ def main():
     # Connect to RHX software via TCP
     rhx.connect_to_waveform_server()
 
-    # # Set up stimulation parameters for all channels
-    # setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
-
-    run_test = True
+    # Set up stimulation parameters for all channels
+    setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
 
     # Check for saved starting currents
     if os.path.exists(VT_INITIAL_I_FILE):
@@ -136,97 +166,98 @@ def main():
     else:
         vt_start = INITIAL_I_MAX
 
+    run_test = True
+    # Set the last check to the hour before the first test to trigger a test immediately if we're at test time
+    last_check = min(IMPEDANCE_TEST_TIME) - 1
     try:
         while run_test:
-            # Measure temperature
-            temperature_sensor_dry_bath.open_connection()
-            temperature_sensor_dry_bath.set_thermocouple_type(THERMOCOUPLE_TYPE_J)
-            time.sleep(0.5)
-            temperature = temperature_sensor_dry_bath.get_temperature() - 5 # offset between dry bath and saline
-            time.sleep(0.5)
-            temperature_sensor_dry_bath.close()
+            current_hour = datetime.datetime.now().hour
 
-            # Measure impedance
-            print("Stimulation off. Running impedance check for SIROF parts.")
-            filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER)
+            if current_hour in IMPEDANCE_TEST_TIME and current_hour > last_check:
+                rhx.stop_board()
 
-            # Import impedance data
-            saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+                # Measure temperature
+                temperature_sensor_dry_bath.open_connection()
+                temperature_sensor_dry_bath.set_thermocouple_type(THERMOCOUPLE_TYPE_J)
+                time.sleep(0.5)
+                temperature = temperature_sensor_dry_bath.get_temperature() - 5 # offset between dry bath and saline
+                time.sleep(0.5)
+                temperature_sensor_dry_bath.close()
 
-            # Check for high impedances; create new dataframe with only tested channels
-            impedances = []
-            phases = []
-            temperatures = []
+                # Measure impedance
+                print("Stimulation off. Running impedance check for SIROF parts.")
+                filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER)
 
-            for channel_i in CHANNELS:
-                channel_i = channel_i.capitalize()
-                impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Magnitude at 1000 Hz (ohms)'].iloc[0]
+                # Import impedance data
+                saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
 
-                if impedance_i > SIROF_IMPEDANCE_THRESHOLD:
-                    sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Channel Name'].iloc[0]
-                    print(f"High impedance detected in sample {sample_i.upper()}: {int(impedance_i/1000)} kohms")
-            
-                impedances.append(impedance_i)
-                phases.append(saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Phase at 1000 Hz (degrees)'].iloc[0])
-                temperatures.append(temperature)
+                # Check for high impedances; create new dataframe with only tested channels
+                impedances = []
+                phases = []
+                temperatures = []
 
-            # Measure CIC
-            max_currents, cics = measure_vt(rhx, CHANNELS, SAMPLES, vt_start, sample_frequency, GEOM_SURF_AREAS)
+                for channel_i in CHANNELS:
+                    channel_i = channel_i.capitalize()
+                    impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Magnitude at 1000 Hz (ohms)'].iloc[0]
 
-            # Create dataframe with all data
-            ztc_dict = {
-                'Channel Number': CHANNELS, 
-                'Channel Name': SAMPLES, 
-                'Impedance Magnitude at 1000 Hz (ohms)': impedances,
-                'Impedance Phase at 1000 Hz (degrees)': phases,
-                'Temperature (C)': temperatures,
-                'Charge Injection Capacity @ 1000 us (uC/cm^2)': cics,
-                'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
-            }
-            impedance_temperature_cic = pd.DataFrame(ztc_dict)
-            
-            # Save new max current
-            vt_start = max_currents
-
-            # Save data
-            impedance_temperature_cic.to_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv", index=False)
-
-            # Set up stimulation parameters for all channels
-            print("Setting up stimulation parameters:")
-            setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
-
-            # Start board running
-            rhx.start_board()
-            time.sleep(0.1)
-            
-            # Wait until next impedance check
-            continue_waiting = True
-            print("Stimulation on; starting IDE EIS tests.")
-
-            collect_impedance_vs_frequency(frequencies)
-
-            # save hour of last impedance/VT check
-            last_check = datetime.datetime.now()
-
-            print("Testing complete. Press ctrl-c to stop stimulation and testing loop.")
-
-            while continue_waiting:
-                # Check current time
-                current_time = datetime.datetime.now()
+                    if impedance_i > SIROF_IMPEDANCE_THRESHOLD:
+                        sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Channel Name'].iloc[0]
+                        print(f"High impedance detected in sample {sample_i.upper()}: {int(impedance_i/1000)} kohms")
                 
-                if (current_time - last_check) < IMPEDANCE_TEST_INTERVAL:
-                    continue_waiting = True
-                    
-                else:
-                    last_check = current_time
-                    continue_waiting = False
-                    print("checking...")
-                    rhx.stop_board()
-                    
-                time.sleep(2)
+                    impedances.append(impedance_i)
+                    phases.append(saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Phase at 1000 Hz (degrees)'].iloc[0])
+                    temperatures.append(temperature)
+
+                # Measure CIC
+                max_currents, cics = measure_vt(rhx, CHANNELS, SAMPLES, vt_start, sample_frequency, GEOM_SURF_AREAS)
+
+                # Create dataframe with all data
+                ztc_dict = {
+                    'Channel Number': CHANNELS, 
+                    'Channel Name': SAMPLES, 
+                    'Impedance Magnitude at 1000 Hz (ohms)': impedances,
+                    'Impedance Phase at 1000 Hz (degrees)': phases,
+                    'Temperature (C)': temperatures,
+                    'Charge Injection Capacity @ 1000 us (uC/cm^2)': cics,
+                    'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
+                }
+                impedance_temperature_cic = pd.DataFrame(ztc_dict)
+                
+                # Save new max current
+                vt_start = max_currents
+
+                # Save data
+                impedance_temperature_cic.to_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv", index=False)
+
+                # Set up stimulation parameters for all channels
+                print("Setting up stimulation parameters:")
+                setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
+
+                # Start board running
+                rhx.start_board()
+                time.sleep(0.12)
+                
+                # Wait until next impedance check
+                continue_waiting = True
+                print("Stimulation on; starting IDE EIS tests.")
+
+                collect_impedance_vs_frequency(frequencies)
+
+                # save hour of last impedance/VT check
+                last_check = current_hour
+
+                print(f"Testing complete at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}. Press ctrl-c to stop stimulation and testing loop.")
+                notify_slack(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
+                write_heartbeat()
+
+            else:
+                # Save the heartbeat, wait a minute, and check again
+                write_heartbeat()
+                time.sleep(60)
+
     except KeyboardInterrupt:
-        rhx.stop_board()
-        print("Test stopped")
+        # rhx.stop_board()
+        print("Automated test stopped, stimulation remains on.")
         
         # Save starting currents
         i_dict = {
@@ -239,6 +270,15 @@ def main():
 
     # Close TCP socket
     rhx.close_tcp()
+
+def notify_slack(message):
+    payload = {'text': message}
+    requests.post(SLACK_WEBHOOK_URL, json=payload)
+
+def write_heartbeat():
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("heartbeat.txt", "w") as f:
+        f.write(f"Last heartbeat: {now}\n")
 
 def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_width, interphase_delay, frequency):
     """
@@ -288,7 +328,7 @@ def measure_vt(rhx, channel_list, sample_list, vt_start, sample_frequency, gsas)
     # Disable all channels
     # Disabling stim doesn't seem to work, so set all currents to zero
     print("Setting all channels to zero current (this takes a few seconds)...")
-    setup_stim_channels(rhx, CHANNELS, SAMPLES, len(PULSE_AMPLITUDES) * [0], PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
+    setup_stim_channels(rhx, CHANNELS, SAMPLES, len(PULSE_AMPLITUDES) * [0], 0, 0, PULSE_FREQUENCY)
 
     # Loop through each channel and run VT test
     for i in range(len(channel_list)):
@@ -514,5 +554,9 @@ if __name__ == '__main__':
     # for a single text command.
     # Increase if many return commands are expected.
     COMMAND_BUFFER_SIZE = 1024
-
-    main()
+    try:
+        main()
+    except Exception as e:
+        error_msg = f"Lifetime testing script crashed at {datetime.datetime.now()}:\n{traceback.format_exc()}"
+        print(error_msg)
+        notify_slack(error_msg)
