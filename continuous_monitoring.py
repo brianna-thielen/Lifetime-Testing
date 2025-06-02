@@ -138,9 +138,6 @@ def main():
     Intterupts with keypress "q"
     """
 
-    # Setup thermocouple
-    temperature_sensor_dry_bath = phidget(TEMP_SENSOR_DRY_BATH_CHANNEL)
-
     # Generate EIS frequencies
     frequencies = generate_frequencies_to_test()
 
@@ -159,12 +156,12 @@ def main():
     # Set up stimulation parameters for all channels
     setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
 
-    # Check for saved starting currents
-    if os.path.exists(VT_INITIAL_I_FILE):
-        vt_start = pd.read_csv(VT_INITIAL_I_FILE)
-        vt_start = vt_start['Starting Current for VT (uA)'].tolist()
-    else:
-        vt_start = INITIAL_I_MAX
+    # # Check for saved starting currents
+    # if os.path.exists(VT_INITIAL_I_FILE):
+    #     vt_start = pd.read_csv(VT_INITIAL_I_FILE)
+    #     vt_start = vt_start['Starting Current for VT (uA)'].tolist()
+    # else:
+    #     vt_start = INITIAL_I_MAX
 
     run_test = True
     # Set the last check to the hour before the first test to trigger a test immediately if we're at test time
@@ -176,55 +173,68 @@ def main():
             if current_hour in IMPEDANCE_TEST_TIME and current_hour > last_check:
                 rhx.stop_board()
 
-                # Measure temperature
-                temperature_sensor_dry_bath.open_connection()
-                temperature_sensor_dry_bath.set_thermocouple_type(THERMOCOUPLE_TYPE_J)
-                time.sleep(0.5)
-                temperature = temperature_sensor_dry_bath.get_temperature() - 5 # offset between dry bath and saline
-                time.sleep(0.5)
-                temperature_sensor_dry_bath.close()
-
-                # Measure impedance
-                print("Stimulation off. Running impedance check for SIROF parts.")
-                filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER)
-
-                # Import impedance data
-                saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
-
-                # Check for high impedances; create new dataframe with only tested channels
-                impedances = []
-                phases = []
-                temperatures = []
-
-                for channel_i in CHANNELS:
-                    channel_i = channel_i.capitalize()
-                    impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Magnitude at 1000 Hz (ohms)'].iloc[0]
-
-                    if impedance_i > SIROF_IMPEDANCE_THRESHOLD:
-                        sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Channel Name'].iloc[0]
-                        print(f"High impedance detected in sample {sample_i.upper()}: {int(impedance_i/1000)} kohms")
-                
-                    impedances.append(impedance_i)
-                    phases.append(saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Phase at 1000 Hz (degrees)'].iloc[0])
-                    temperatures.append(temperature)
-
-                # Measure CIC
-                max_currents, cics = measure_vt(rhx, CHANNELS, SAMPLES, vt_start, sample_frequency, GEOM_SURF_AREAS)
-
-                # Create dataframe with all data
+                # Create a dataframe to store impedance, temperature, and CIC data
                 ztc_dict = {
                     'Channel Number': CHANNELS, 
                     'Channel Name': SAMPLES, 
-                    'Impedance Magnitude at 1000 Hz (ohms)': impedances,
-                    'Impedance Phase at 1000 Hz (degrees)': phases,
-                    'Temperature (C)': temperatures,
-                    'Charge Injection Capacity @ 1000 us (uC/cm^2)': cics,
+                    'Impedance Magnitude at 1 kHz (ohms)': None,
+                    'Impedance Magnitude at all frequencies (ohms)': None,
+                    'Impedance Phase at 10 kHz (degrees)': None,
+                    'Impedance Phase at all frequencies (degrees)': None,
+                    'Temperature (C)': None,
+                    'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
                     'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
                 }
                 impedance_temperature_cic = pd.DataFrame(ztc_dict)
+
+                # Measure impedance and temperature
+                print("Stimulation off. Running impedance check for SIROF parts.")
+                impedance_temperature_cic, filename = measure_intan_impedance(rhx, frequencies, impedance_temperature_cic)
+
+                # # Measure temperature
+                # temperature = measure_temperature()
+
+                # # Measure impedance
+                # print("Stimulation off. Running impedance check for SIROF parts.")
+                # filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, 1000)
+
+                # # Import impedance data
+                # saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+
+                # # Check for high impedances; create new dataframe with only tested channels
+                # impedances = []
+                # phases = []
+                # temperatures = []
+
+                # for channel_i in CHANNELS:
+                #     channel_i = channel_i.capitalize()
+                #     impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Magnitude at 1000 Hz (ohms)'].iloc[0]
+
+                #     if impedance_i > SIROF_IMPEDANCE_THRESHOLD:
+                #         sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Channel Name'].iloc[0]
+                #         print(f"High impedance detected in sample {sample_i.upper()}: {int(impedance_i/1000)} kohms")
                 
-                # Save new max current
-                vt_start = max_currents
+                #     impedances.append(impedance_i)
+                #     phases.append(saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Phase at 1000 Hz (degrees)'].iloc[0])
+                #     temperatures.append(temperature)
+
+                # Measure CIC and max currents
+                impedance_temperature_cic = measure_vt(rhx, CHANNELS, SAMPLES, sample_frequency, GEOM_SURF_AREAS, impedance_temperature_cic)
+
+                # # Create dataframe with all data
+                # ztc_dict = {
+                #     'Channel Number': CHANNELS, 
+                #     'Channel Name': SAMPLES, 
+                #     'Impedance Magnitude at 1000 Hz (ohms)': None,
+                #     'Impedance Phase at 1000 Hz (degrees)': None,
+                #     'Temperature (C)': None,
+                #     'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
+                #     'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
+                # }
+                # impedance_temperature_cic = pd.DataFrame(ztc_dict)
+                
+                # # Save new max current
+                # vt_start = max_currents
 
                 # Save data
                 impedance_temperature_cic.to_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv", index=False)
@@ -237,8 +247,8 @@ def main():
                 rhx.start_board()
                 time.sleep(0.12)
                 
-                # Wait until next impedance check
-                continue_waiting = True
+                # # Wait until next impedance check
+                # continue_waiting = True
                 print("Stimulation on; starting IDE EIS tests.")
 
                 collect_impedance_vs_frequency(frequencies)
@@ -258,6 +268,7 @@ def main():
     except KeyboardInterrupt:
         # rhx.stop_board()
         print("Automated test stopped, stimulation remains on.")
+        notify_slack(f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
         
         # Save starting currents
         i_dict = {
@@ -313,7 +324,74 @@ def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_wi
         if pulse_amplitude == 0:
             rhx.disable_stim(channel)
 
-def measure_vt(rhx, channel_list, sample_list, vt_start, sample_frequency, gsas):
+
+def measure_temperature():
+    temp_sensor = phidget(TEMP_SENSOR_DRY_BATH_CHANNEL)
+    temp_sensor.open_connection()
+    temp_sensor.set_thermocouple_type(THERMOCOUPLE_TYPE_J)
+    time.sleep(0.5)
+    temperature = temp_sensor.get_temperature() - 5 # offset between dry bath and saline
+    time.sleep(0.5)
+    temp_sensor.close()
+
+    return temperature
+
+
+def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
+    impedances = []
+    phases = []
+    temperatures = []
+    channels = []
+
+    # Measure temperature
+    temperature = measure_temperature()
+
+    # Loop through each frequency
+    for i, freq in enumerate(frequencies):
+        filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, freq)
+
+        # Import saved impedance data
+        saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+
+        # Delete the file unless it's the last one
+        if i < len(frequencies) - 1:
+            os.remove(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+
+        # Add tested channels to list
+        for channel_i in CHANNELS:
+            channel_i = channel_i.capitalize()
+            impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, f'Impedance Magnitude at {freq} Hz (ohms)'].iloc[0]
+            phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, f'Impedance Phase at {freq} Hz (degrees)'].iloc[0]
+        
+            impedances.append(impedance_i)
+            phases.append(phase_i)
+            temperatures.append(temperature)
+            channels.append(channel_i)
+
+    # Once through all frequencies, separate EIS data by channel
+    for channel_i in CHANNELS:
+        channel_i = channel_i.capitalize()
+        impedance_i = [imp for ch, imp in zip(channels, impedances) if ch == channel_i]
+        impedance_i_1k = impedance_i[frequencies.index(1000)]
+
+        phase_i = [ph for ch, ph in zip(channels, phases) if ch == channel_i]
+        phase_i_10k = phase_i[frequencies.index(10000)]
+
+        temperature_i = [temp for ch, temp in zip(channels, temperatures) if ch == channel_i]
+        temperature_i = sum(temperature_i)/len(temperature_i)  # Average temperature for the channel
+
+        # Add data to dataframe
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at 1 kHz (ohms)'] = impedance_i_1k
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at all frequencies (ohms)'] = impedance_i
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at 10 kHz (degrees)'] = phase_i_10k
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at all frequencies (degrees)'] = phase_i
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Temperature (C)'] = temperature_i
+    
+    # return data and filename
+    return impedance_temperature_cic, filename
+
+
+def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance_temperature_cic):
     """"
     Runs VT test
     """
@@ -324,6 +402,13 @@ def measure_vt(rhx, channel_list, sample_list, vt_start, sample_frequency, gsas)
     print("Running VT test for SIROF parts:")
     print("Disabling all currents for test...")
     rhx.reset()
+
+    # Check for saved starting currents
+    if os.path.exists(VT_INITIAL_I_FILE):
+        vt_start = pd.read_csv(VT_INITIAL_I_FILE)
+        vt_start = vt_start['Starting Current for VT (uA)'].tolist()
+    else:
+        vt_start = INITIAL_I_MAX
 
     # Disable all channels
     # Disabling stim doesn't seem to work, so set all currents to zero
@@ -402,7 +487,13 @@ def measure_vt(rhx, channel_list, sample_list, vt_start, sample_frequency, gsas)
         max_current_list.append(max_current*0.9)
         cic_list.append(cic)
 
-    return max_current_list, cic_list
+    # Save CICs to dataframe
+    impedance_temperature_cic['Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic_list
+
+    # Save new max current
+    vt_start = max_current_list
+
+    return impedance_temperature_cic
 
 def calcluate_ep(vt_data):
     vt_adjusted = vt_data
@@ -454,7 +545,15 @@ def generate_frequencies_to_test():
     frequencies = np.logspace(
         np.log10(IDE_START_FREQ_HZ), np.log10(IDE_END_FREQ_HZ), IDE_NUM_FREQ_POINTS
     )
-    # print("Frequencies to be tested against: ", frequencies)
+    
+    if 1000 not in frequencies:
+        frequencies = np.append(frequencies, 1000)
+        
+    if 10000 not in frequencies:
+        frequencies = np.append(frequencies, 10000)
+
+    frequencies = np.sort(frequencies).tolist()
+
     return frequencies
 
 
@@ -467,10 +566,6 @@ def collect_impedance_vs_frequency(frequencies):
     Returns:
         freq_data_df (pandas.DataFrame): Dataframe containing impedance and phase angle data.
     """
-    temperature_sensor_dry_bath = phidget(TEMP_SENSOR_DRY_BATH_CHANNEL)
-    temperature_sensor_dry_bath.open_connection()
-    temperature_sensor_dry_bath.set_thermocouple_type(THERMOCOUPLE_TYPE_J)
-    temperature_sensor_dry_bath.get_thermocouple_type()
 
     lcx100 = lcx(LCR_RESOURCE_ADDRESS)
     mux = kmux(MUX_RESOURCE_ADDRESS)
@@ -515,7 +610,7 @@ def collect_impedance_vs_frequency(frequencies):
             else:
                 time.sleep(LCR_DATA_COLLECTION_DELAY_SEC)
             impedance, phase_angle = lcx100.get_impedance()
-            temp_dry_bath = temperature_sensor_dry_bath.get_temperature()
+            temp_dry_bath = measure_temperature()
             time.sleep(THERMOCOUPLE_DELAY_TEMP_SEC)
             freq_data.append(
                 {
@@ -541,8 +636,6 @@ def collect_impedance_vs_frequency(frequencies):
         file_path = f"{folder}/{filename}.csv"
         freq_data_df.to_csv(file_path, index=False)
 
-
-    temperature_sensor_dry_bath.close()
     lcx100.set_voltage(25.0 / 1000) # Set voltage back to 25 mV for safety
     lcx100.close()
     mux.close()

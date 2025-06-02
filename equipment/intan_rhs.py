@@ -246,7 +246,7 @@ class IntanRHS:
         print("end")
         
         
-    def measure_impedance(self, folder):
+    def measure_impedance(self, folder, frequency=1000):
         # Set file parameters
         # Create directory if it doesn't exist
         if os.path.exists(folder) == False:
@@ -260,13 +260,13 @@ class IntanRHS:
         self.scommand.sendall(f'set impedancefilename.path {folder}'.encode('utf-8'))
         time.sleep(1)
 
-        # Set measurement frequency to 1 kHz.
-        self.scommand.sendall(b'set desiredimpedancefreqhertz 1000')
+        # Set measurement frequency.
+        self.scommand.sendall(f'set desiredimpedancefreqhertz {frequency}'.encode('utf-8'))
         time.sleep(1)
 
         # Send TCP commands to measure impedance.
         self.scommand.sendall(b'execute measureimpedance')
-        time.sleep(4)
+        time.sleep(((1/frequency)*32) + 4)
 
         # Save impedance data        
         self.scommand.sendall(b'execute saveimpedance')
