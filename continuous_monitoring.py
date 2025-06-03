@@ -17,7 +17,7 @@ from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as p
 SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 IMPEDANCE_TEST_INTERVAL = datetime.timedelta(hours=12)
-IMPEDANCE_TEST_TIME = (12, 18) #tests at 8am and 8pm every day
+IMPEDANCE_TEST_TIME = (13, 18) #tests at 8am and 8pm every day
 
 GROUPS = {
     "SIROF vs Pt": ["IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10"],
@@ -27,7 +27,6 @@ GROUPS = {
 }
 
 # SIROF SAMPLE CONSTANTS
-IMPEDANCE_CIC_FOLDER = "C:/Users/3DPrint-Integral/src/integral_npsw/Lifetime-Testing/data/coatings/intan-measurements/"
 BROKEN_ELECTRODES = ["IR07", "PT01"]
 # SAMPLES = [
 #     "IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", 
@@ -203,12 +202,9 @@ def main():
 
                 # Save data, sorted to group
                 for group, devices in GROUPS.items():
-                    print(devices)
-                    print(impedance_temperature_cic)
-                    impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
-                    impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
-
-                impedance_temperature_cic.to_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv", index=False)
+                    if len(devices) > 0:
+                        impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
+                        impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
 
                 # Set up stimulation parameters for all channels
                 print("Setting up stimulation parameters:")
@@ -322,13 +318,13 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
     for freq in frequencies:
         if freq > 30 and freq < 5060: # Intan won't test outside this range
             frequencies_updated.append(freq)
-            filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, freq)
+            filename = rhx.measure_impedance("./data/temp/", freq)
 
             # Import saved impedance data
-            saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+            saved_impedances = pd.read_csv(f"./data/temp/{filename}.csv")
 
             # Delete the file
-            os.remove(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+            os.remove(f"./data/temp/{filename}.csv")
 
             # Add tested channels to list
             for channel_i in CHANNELS:
@@ -575,12 +571,12 @@ def collect_impedance_vs_frequency(frequencies):
         # For IDEs, test full frequency spectrum at 25 mV and point to IDE data folder
         if "IDE" in sample:
             test_frequencies = frequencies
-            folder = "./data/IDE/automated-eis"
+            folder = "./data/LCP IDEs"
             voltage = 25.0 / 1000
         # For Encapsulated samples, test only 1 kHz at .5 V and point to encapsulation data folder
         elif "ENCAP" in sample:
             test_frequencies = [1000]
-            folder = "./data/encapsulation"
+            folder = "./data/LCP Encapsulation"
             voltage = 0.5
 
         for freq in test_frequencies:
