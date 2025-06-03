@@ -4,7 +4,7 @@ class Phidget22TemperatureSensor:
     def __init__(self, channel):
         self.ch = TemperatureSensor()
         self.ch.setChannel(channel)
-        print(f"Opening Temperature Sensor connection at channel: {channel}")
+        # print(f"Opening Temperature Sensor connection at channel: {channel}")
 
     def open_connection(self):
         self.ch.openWaitForAttachment(1000)
@@ -25,5 +25,5 @@ class Phidget22TemperatureSensor:
         return temperature
     
     def close(self):
-        print("Closing Temperature Sensor connection...")
+        # print("Closing Temperature Sensor connection...")
         self.ch.close()

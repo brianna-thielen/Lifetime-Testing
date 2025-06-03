@@ -17,7 +17,14 @@ from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as p
 SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 IMPEDANCE_TEST_INTERVAL = datetime.timedelta(hours=12)
-IMPEDANCE_TEST_TIME = (8, 20) #tests at 8am and 8pm every day
+IMPEDANCE_TEST_TIME = (12, 18) #tests at 8am and 8pm every day
+
+GROUPS = {
+    "SIROF vs Pt": ["IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10"],
+    "LCP Pt Grids": ["G1X1-1", "G1X1-2", "G3X3S-1", "G3X3S-2", "G2X2S-1", "G2X2S-2", "G2X2L-1", "G2X2L-2"],
+    "LCP IDEs": ["IDE-25-1", "IDE-25-2", "IDE-25-3", "IDE-25-4", "IDE-25-5", "IDE-25-6", "IDE-25-7", "IDE-25-8", "IDE-100-1", "IDE-100-2", "IDE-100-3", "IDE-100-4", "IDE-100-5", "IDE-100-6", "IDE-100-7", "IDE-100-8"],
+    "LCP Encapsulation": ["ENCAP-R-100-1", "ENCAP-R-100-2"]
+}
 
 # SIROF SAMPLE CONSTANTS
 IMPEDANCE_CIC_FOLDER = "C:/Users/3DPrint-Integral/src/integral_npsw/Lifetime-Testing/data/coatings/intan-measurements/"
@@ -154,21 +161,20 @@ def main():
     rhx.connect_to_waveform_server()
 
     # Set up stimulation parameters for all channels
-    setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
+    # setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
 
-    # # Check for saved starting currents
-    # if os.path.exists(VT_INITIAL_I_FILE):
-    #     vt_start = pd.read_csv(VT_INITIAL_I_FILE)
-    #     vt_start = vt_start['Starting Current for VT (uA)'].tolist()
-    # else:
-    #     vt_start = INITIAL_I_MAX
+    # Start board running
+    rhx.start_board()
+    print('Starting stim.')
 
     run_test = True
     # Set the last check to the hour before the first test to trigger a test immediately if we're at test time
     last_check = min(IMPEDANCE_TEST_TIME) - 1
+    print(f'last: {last_check}')
     try:
         while run_test:
             current_hour = datetime.datetime.now().hour
+            print(f'current: {current_hour}')
 
             if current_hour in IMPEDANCE_TEST_TIME and current_hour > last_check:
                 rhx.stop_board()
@@ -178,9 +184,10 @@ def main():
                     'Channel Number': CHANNELS, 
                     'Channel Name': SAMPLES, 
                     'Impedance Magnitude at 1 kHz (ohms)': None,
-                    'Impedance Magnitude at all frequencies (ohms)': None,
-                    'Impedance Phase at 10 kHz (degrees)': None,
-                    'Impedance Phase at all frequencies (degrees)': None,
+                    'Impedance Phase at 1 kHz (degrees)': None,
+                    'EIS Magnitude Data (ohms)': None,
+                    'EIS Phase Data (degrees)': None,
+                    'EIS Frequency Data (Hz)': None,
                     'Temperature (C)': None,
                     'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
                     'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
@@ -191,52 +198,16 @@ def main():
                 print("Stimulation off. Running impedance check for SIROF parts.")
                 impedance_temperature_cic, filename = measure_intan_impedance(rhx, frequencies, impedance_temperature_cic)
 
-                # # Measure temperature
-                # temperature = measure_temperature()
-
-                # # Measure impedance
-                # print("Stimulation off. Running impedance check for SIROF parts.")
-                # filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, 1000)
-
-                # # Import impedance data
-                # saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
-
-                # # Check for high impedances; create new dataframe with only tested channels
-                # impedances = []
-                # phases = []
-                # temperatures = []
-
-                # for channel_i in CHANNELS:
-                #     channel_i = channel_i.capitalize()
-                #     impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Magnitude at 1000 Hz (ohms)'].iloc[0]
-
-                #     if impedance_i > SIROF_IMPEDANCE_THRESHOLD:
-                #         sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Channel Name'].iloc[0]
-                #         print(f"High impedance detected in sample {sample_i.upper()}: {int(impedance_i/1000)} kohms")
-                
-                #     impedances.append(impedance_i)
-                #     phases.append(saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, 'Impedance Phase at 1000 Hz (degrees)'].iloc[0])
-                #     temperatures.append(temperature)
-
                 # Measure CIC and max currents
                 impedance_temperature_cic = measure_vt(rhx, CHANNELS, SAMPLES, sample_frequency, GEOM_SURF_AREAS, impedance_temperature_cic)
 
-                # # Create dataframe with all data
-                # ztc_dict = {
-                #     'Channel Number': CHANNELS, 
-                #     'Channel Name': SAMPLES, 
-                #     'Impedance Magnitude at 1000 Hz (ohms)': None,
-                #     'Impedance Phase at 1000 Hz (degrees)': None,
-                #     'Temperature (C)': None,
-                #     'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
-                #     'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
-                # }
-                # impedance_temperature_cic = pd.DataFrame(ztc_dict)
-                
-                # # Save new max current
-                # vt_start = max_currents
+                # Save data, sorted to group
+                for group, devices in GROUPS.items():
+                    print(devices)
+                    print(impedance_temperature_cic)
+                    impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
+                    impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
 
-                # Save data
                 impedance_temperature_cic.to_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv", index=False)
 
                 # Set up stimulation parameters for all channels
@@ -247,8 +218,7 @@ def main():
                 rhx.start_board()
                 time.sleep(0.12)
                 
-                # # Wait until next impedance check
-                # continue_waiting = True
+                # Wait until next impedance check
                 print("Stimulation on; starting IDE EIS tests.")
 
                 collect_impedance_vs_frequency(frequencies)
@@ -256,7 +226,7 @@ def main():
                 # save hour of last impedance/VT check
                 last_check = current_hour
 
-                print(f"Testing complete at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}. Press ctrl-c to stop stimulation and testing loop.")
+                print(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Press ctrl-c to stop stimulation and testing loop.")
                 notify_slack(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
                 write_heartbeat()
 
@@ -342,52 +312,65 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
     phases = []
     temperatures = []
     channels = []
+    frequencies_updated = []
 
     # Measure temperature
     temperature = measure_temperature()
 
     # Loop through each frequency
-    for i, freq in enumerate(frequencies):
-        filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, freq)
+    print('Measuring impedances...')
+    for freq in frequencies:
+        if freq > 30 and freq < 5060: # Intan won't test outside this range
+            frequencies_updated.append(freq)
+            filename = rhx.measure_impedance(IMPEDANCE_CIC_FOLDER, freq)
 
-        # Import saved impedance data
-        saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
+            # Import saved impedance data
+            saved_impedances = pd.read_csv(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
 
-        # Delete the file unless it's the last one
-        if i < len(frequencies) - 1:
+            # Delete the file
             os.remove(f"{IMPEDANCE_CIC_FOLDER}{filename}.csv")
 
-        # Add tested channels to list
-        for channel_i in CHANNELS:
-            channel_i = channel_i.capitalize()
-            impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, f'Impedance Magnitude at {freq} Hz (ohms)'].iloc[0]
-            phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i, f'Impedance Phase at {freq} Hz (degrees)'].iloc[0]
-        
-            impedances.append(impedance_i)
-            phases.append(phase_i)
-            temperatures.append(temperature)
-            channels.append(channel_i)
+            # Add tested channels to list
+            for channel_i in CHANNELS:
+                channel_i = channel_i.capitalize()
+                impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 4]
+                phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 5]
+            
+                impedances.append(impedance_i)
+                phases.append(phase_i)
+                temperatures.append(temperature)
+                channels.append(channel_i)
 
     # Once through all frequencies, separate EIS data by channel
-    for channel_i in CHANNELS:
+    for i, channel_i in enumerate(CHANNELS):
         channel_i = channel_i.capitalize()
+        sample_i = SAMPLES[i]
         impedance_i = [imp for ch, imp in zip(channels, impedances) if ch == channel_i]
-        impedance_i_1k = impedance_i[frequencies.index(1000)]
+        impedance_i_1k = impedance_i[frequencies_updated.index(1000)]
 
         phase_i = [ph for ch, ph in zip(channels, phases) if ch == channel_i]
-        phase_i_10k = phase_i[frequencies.index(10000)]
+        phase_i_1k = phase_i[frequencies_updated.index(1000)]
 
         temperature_i = [temp for ch, temp in zip(channels, temperatures) if ch == channel_i]
         temperature_i = sum(temperature_i)/len(temperature_i)  # Average temperature for the channel
 
-        # Add data to dataframe
+        # Add summary data to dataframe
         impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at 1 kHz (ohms)'] = impedance_i_1k
-        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at all frequencies (ohms)'] = impedance_i
-        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at 10 kHz (degrees)'] = phase_i_10k
-        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at all frequencies (degrees)'] = phase_i
+        impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at 1 kHz (degrees)'] = phase_i_1k
         impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Temperature (C)'] = temperature_i
+
+        # Save EIS data separately by channel
+        freq_data = {
+            "Frequency": frequencies_updated,
+            "Impedance": impedance_i,
+            "Phase Angle": phase_i,
+            "Temperature (Dry Bath)": [temperature_i] * len(frequencies_updated),
+        }
+        freq_data_df = pd.DataFrame(freq_data)
+        
+        file_path = f"./data/SIROF vs Pt/intan-eis/EIS_{sample_i}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+        freq_data_df.to_csv(file_path, index=False)
     
-    # return data and filename
     return impedance_temperature_cic, filename
 
 
@@ -400,7 +383,6 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
     cic_list = []
 
     print("Running VT test for SIROF parts:")
-    print("Disabling all currents for test...")
     rhx.reset()
 
     # Check for saved starting currents
@@ -412,7 +394,7 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
 
     # Disable all channels
     # Disabling stim doesn't seem to work, so set all currents to zero
-    print("Setting all channels to zero current (this takes a few seconds)...")
+    print("Disabling all currents for test (this takes a few seconds)...")
     setup_stim_channels(rhx, CHANNELS, SAMPLES, len(PULSE_AMPLITUDES) * [0], 0, 0, PULSE_FREQUENCY)
 
     # Loop through each channel and run VT test
@@ -651,5 +633,8 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         error_msg = f"Lifetime testing script crashed at {datetime.datetime.now()}:\n{traceback.format_exc()}"
+
+        if "KeyboardInterrupt" not in error_msg:
+            notify_slack(error_msg)
         print(error_msg)
-        notify_slack(error_msg)
+        

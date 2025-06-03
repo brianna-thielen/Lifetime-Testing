@@ -266,7 +266,7 @@ class IntanRHS:
 
         # Send TCP commands to measure impedance.
         self.scommand.sendall(b'execute measureimpedance')
-        time.sleep(((1/frequency)*32) + 4)
+        time.sleep((500/frequency) + 2)
 
         # Save impedance data        
         self.scommand.sendall(b'execute saveimpedance')
