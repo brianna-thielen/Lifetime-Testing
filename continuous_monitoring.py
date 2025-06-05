@@ -198,8 +198,8 @@ def main():
                 ztc_dict = {
                     'Channel Number': CHANNELS, 
                     'Channel Name': SAMPLES, 
-                    'Impedance Magnitude at 1 kHz (ohms)': None,
-                    'Impedance Phase at 1 kHz (degrees)': None,
+                    'Impedance Magnitude at 1000 Hz (ohms)': None,
+                    'Impedance Phase at 1000 Hz (degrees)': None,
                     'Temperature (C)': None,
                     'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
                     'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
@@ -217,7 +217,7 @@ def main():
                 # Save data, sorted to group
                 for group, devices in GROUPS.items():
                     impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
-                    if len(impedance_temperature_cic) > 0:
+                    if impedance_temperature_cic.empty:
                         impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
 
                 # Set up stimulation parameters for all channels

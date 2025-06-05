@@ -142,10 +142,10 @@ def process_arduino_data(path, df_encap):
 	# we need temp data from here to calculate RH from resistive sensors
 	for file in files:
 		# Skip spreadsheet and LCR files (labeled with EIS)
-		if "Soak Testing" in file or "EIS_" in file or "html" in file:
+		if "Soak Testing" in file or "EIS_" in file or "html" in file or "csv" in file:
 			continue
 
-		raw_data = pd.read_csv(f"{path}//{file}")
+		raw_data = pd.read_csv(f"{path}{file}")
 
 		header = str(raw_data.iloc[0])
 
