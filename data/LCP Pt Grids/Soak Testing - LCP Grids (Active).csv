@@ -1,0 +1,13 @@
+,,,,,,,,"Current (mA) at Ep = -0.6 V, 500 us pulse width",,,,,,,
+,,,,,,,,12.5 um PT on LCP (laser cut),,,,,,,
+Date,Time,Stim On/Off,Initials,Real Days (Current Step),"Temp
+(deg C)",Accel. Days (Total),# Pulses,G1X1-1,G1X1-2,G2X2-1,G2X2-2,G3X3-1,G3X3-2,G2X2L-1,G2X2L-2
+,,,Parameters,Intan Channel (board) ->,,,,0,1,2,3,19,31,30,29
+,,,,Intan Channel (software) ->,,,,24,25,26,11,11,23,22,21
+,,,,Stim Amplitude (uA) ->,,,,400,400,400,400,400,400,400,400
+,,,,GSA ->,,,,4,4,3.9601,3.9601,3.9204,3.9204,4,4
+4/24/25,4:00 PM,OFF,BT,0.00,24.0,0.00,0.00E+00,,,,,,,,
+4/24/25,5:53 PM,OFF,BT,0.08,65.8,0.58,0.00E+00,,,,,,,,
+4/25/25,3:19 PM,ON,BT,0.89,66.0,7.24,0.00E+00,,,,,,,,
+5/16/25,10:47 AM,OFF,BT,20.81,66.3,165.85,8.99E+07,,,,,,,,
+5/19/25,9:37 AM,ON,BT,2.95,66.2,188.18,8.99E+07,,,,,,,,

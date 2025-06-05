@@ -1,4 +1,4 @@
-,Channel Number,Channel Name,Impedance Magnitude at 1 kHz (ohms),Impedance Phase at 1 kHz (degrees),Temperature (C),Charge Injection Capacity @ 1000 us (uC/cm^2),Geometric Surface Area (mm^2)
+,Channel Number,Channel Name,Impedance Magnitude at 1000 Hz (ohms),Impedance Phase at 1000 Hz (degrees),Temperature (C),Charge Injection Capacity @ 1000 us (uC/cm^2),Geometric Surface Area (mm^2)
 0,d-024,IR01,12700.0,-26,66.153,15.762826601965081,1.7272
 1,d-025,IR02,22200.0,-24,66.153,21.6124526181338,0.8103
 2,d-026,IR03,3060.0,-26,66.153,110.15442393046342,1.1716
