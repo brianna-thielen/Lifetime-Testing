@@ -217,7 +217,7 @@ def main():
                 # Save data, sorted to group
                 for group, devices in GROUPS.items():
                     impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
-                    if impedance_temperature_cic.empty:
+                    if not impedance_temperature_cic_group.empty:
                         impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
 
                 # Set up stimulation parameters for all channels
@@ -288,11 +288,11 @@ def main():
                     failing_devices_z = [pt[i] for i in flagged_indices_zpt] + [sirof[i] for i in flagged_indices_zir]
 
                     if len(failing_devices_cic) == 0:
-                        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
+                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
                     elif len(failing_devices_z) == 0:
-                        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
+                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
                     else:
-                        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
+                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
 
                 print(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}.")
                 print(summary_encap)
@@ -311,16 +311,6 @@ def main():
         # rhx.stop_board()
         print("Automated test stopped, stimulation remains on.")
         notify_slack(f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
-        
-        # Save starting currents
-        if vt_start in locals():
-            i_dict = {
-                    'Channel Number': CHANNELS, 
-                    'Channel Name': SAMPLES, 
-                    'Starting Current for VT (uA)': vt_start
-                }
-            vt_start = pd.DataFrame(i_dict)
-            vt_start.to_csv(VT_INITIAL_I_FILE, index=False)
 
     # Close TCP socket
     rhx.close_tcp()
@@ -414,8 +404,6 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
                 channels.append(channel_i)
                 frequencies_updated.append(freq)
 
-    print('before sorting')
-    print(impedance_temperature_cic)
     # Once through all frequencies, separate EIS data by channel
     for i, channel_i in enumerate(CHANNELS):
         channel_i_cap = channel_i.capitalize()
@@ -433,9 +421,6 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
         temperature_i = sum(temperature_i)/len(temperature_i)  # Average temperature for the channel
 
         # Add summary data to dataframe
-        print(impedance_temperature_cic['Channel Number'] == channel_i)
-        print(channel_i)
-        print(impedance_temperature_cic)
         impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at 1000 Hz (ohms)'] = impedance_i_1k
         impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at 1000 Hz (degrees)'] = phase_i_1k
         impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Temperature (C)'] = temperature_i
@@ -555,6 +540,14 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
 
     # Save new max current
     vt_start = max_current_list
+
+    i_dict = {
+        'Channel Number': CHANNELS, 
+        'Channel Name': SAMPLES, 
+        'Starting Current for VT (uA)': vt_start
+    }
+    vt_start = pd.DataFrame(i_dict)
+    vt_start.to_csv(VT_INITIAL_I_FILE, index=False)
 
     return impedance_temperature_cic
 

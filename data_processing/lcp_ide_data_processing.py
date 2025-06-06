@@ -155,7 +155,7 @@ def perform_data_analysis(path):
 def process_eis_data(df_z, file, path):
 	"""
 	"""
-
+	print(file)
 	# Find timestamp
 	i = len(file)
 	year = int(file[i-18:i-14])

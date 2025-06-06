@@ -264,7 +264,7 @@ def process_vt_spreadsheet_data(filepath, df_experiment, df_cic500_scope):
 		accel_days = accel_days.replace(",", "")
 		accel_days = float(accel_days)
 		# the others aren't formatted with commas, so can be converted directly
-		temp = float(row["Temp\n(deg C)"])
+		temp = float(row["Temp\r\n(deg C)"])
 		test_date = row["Date"]
 		test_time = row["Time"]
 		
