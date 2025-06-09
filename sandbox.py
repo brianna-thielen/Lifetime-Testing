@@ -18,7 +18,7 @@ FLAGS = {
     "Pt (vs SIROF) - Z": 10000, # ohms
     "Pt (vs SIROF) - CIC": 30, # uC/cm2
     "LCP Pt Grids - Z": 10000, # ohms
-    "LCP Pt Grids - CIC": 30, # uC/cm2
+    "LCP Pt Grids - CIC": 10, # uC/cm2
     "LCP IDEs - value": 10000, # ohms
     "LCP IDEs - change": 0.8, # difference from start
     "LCP Encapsulation - Cap": 20, # %RH
@@ -87,4 +87,24 @@ FLAGS = {
 
 #     print(summary_sirof)
 
-days_grids, cic_grids, z_grids = process_lcp_pt_grids_soak_data(True)
+days_grids, cic_grids, z_grids = process_lcp_pt_grids_soak_data()
+
+flagged_indices_cic = [i for i, c in enumerate(cic_grids) if c < FLAGS["LCP Pt Grids - CIC"]]
+flagged_indices_z = [i for i, z in enumerate(z_grids) if z > FLAGS["LCP Pt Grids - Z"]]
+
+if len(flagged_indices_cic) + len(flagged_indices_z) == 0:
+    summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, all parts within expected range."
+else:
+    grids = GROUPS["LCP Pt Grids"]
+
+    failing_devices_cic = [grids[i] for i in flagged_indices_cic]
+    failing_devices_z = [grids[i] for i in flagged_indices_z]
+
+    if len(failing_devices_cic) == 0:
+        summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
+    elif len(failing_devices_z) == 0:
+        summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
+    else:
+        summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
+
+print(summary_grids)
