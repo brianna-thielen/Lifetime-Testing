@@ -91,7 +91,7 @@ def process_lcp_pt_grids_soak_data(plot_on=False):
 		fig_cic.show()
 
 	# Extract most recent values of CIC and impedance (intan measurements only)
-	mask = [col for col in df_z.columns if col.startswith('PT')]
+	mask = [col for col in df_z.columns if col.startswith('G')]
 	
 	z = df_z[mask].iloc[-1]
 

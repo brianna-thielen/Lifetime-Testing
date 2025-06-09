@@ -17,6 +17,7 @@ from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as p
 from data_processing.lcp_encapsulation_data_processing import process_encapsulation_soak_data
 from data_processing.lcp_ide_data_processing import process_ide_soak_data
 from data_processing.sirof_vs_pt_data_processing import process_coating_soak_data
+from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_soak_data
 
 SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
@@ -35,7 +36,7 @@ FLAGS = {
     "Pt (vs SIROF) - Z": 10000, # ohms
     "Pt (vs SIROF) - CIC": 30, # uC/cm2
     "LCP Pt Grids - Z": 10000, # ohms
-    "LCP Pt Grids - CIC": 30, # uC/cm2
+    "LCP Pt Grids - CIC": 10, # uC/cm2
     "LCP IDEs - value": 10000, # ohms
     "LCP IDEs - change": 0.8, # difference from start
     "LCP Encapsulation - Cap": 20, # %RH
@@ -191,6 +192,7 @@ def main():
     last_update_encap = 0
     last_update_ide = 0
     last_update_sirof = 0
+    last_update_grids = 0
 
     try:
         while run_test:
@@ -241,7 +243,7 @@ def main():
                 last_check = current_hour
 
                 # Process data to flag any issues
-                summary_encap, summary_ide, summary_sirof, last_update_encap, last_update_ide, last_update_sirof = process_all_data(last_update_encap, last_update_ide, last_update_sirof)
+                summary_encap, summary_ide, summary_sirof, summary_grids, last_update_encap, last_update_ide, last_update_sirof, last_update_grids = process_all_data(last_update_encap, last_update_ide, last_update_sirof, last_update_grids)
 
                 # Print summary and notify slack (if applicable)
                 print(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}.")
@@ -644,7 +646,7 @@ def collect_impedance_vs_frequency(frequencies):
     lcx100.close()
     mux.close()
 
-def process_all_data(last_update_encap, last_update_ide, last_update_sirof):
+def process_all_data(last_update_encap, last_update_ide, last_update_sirof, last_update_grids):
     # Processes all soak data and flags any issues.
     # Encapsulation data
     days_encap, rh_cap_sensors, rh_res_sensors = process_encapsulation_soak_data()
@@ -703,6 +705,27 @@ def process_all_data(last_update_encap, last_update_ide, last_update_sirof):
         else:
             summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
 
+    # LCP Grids
+    days_grids, cic_grids, z_grids = process_lcp_pt_grids_soak_data()
+
+    flagged_indices_cic = [i for i, c in enumerate(cic_grids) if c < FLAGS["LCP Pt Grids - CIC"]]
+    flagged_indices_z = [i for i, z in enumerate(z_grids) if z > FLAGS["LCP Pt Grids - Z"]]
+    
+    if len(flagged_indices_cic) + len(flagged_indices_z) == 0:
+        summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, all parts within expected range."
+    else:
+        grids = GROUPS["LCP Pt Grids"]
+
+        failing_devices_cic = [grids[i] for i in flagged_indices_cic]
+        failing_devices_z = [grids[i] for i in flagged_indices_z]
+
+        if len(failing_devices_cic) == 0:
+            summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
+        elif len(failing_devices_z) == 0:
+            summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
+        else:
+            summary_grids = f"LCP Pt Grids test at {round(days_grids/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
+
     # If we reach a next year, notify slack
     if round(days_encap/365.25) > last_update_encap:
         last_update_encap = round(days_encap/365.25)
@@ -715,8 +738,12 @@ def process_all_data(last_update_encap, last_update_ide, last_update_sirof):
     if round(days_sirof/365.25) > last_update_sirof:
         last_update_sirof = round(days_sirof/365.25)
         notify_slack(summary_sirof)
+    
+    if round(days_grids/365.25) > last_update_grids:
+        last_update_grids = round(days_grids/365.25)
+        notify_slack(summary_grids)
 
-    return summary_encap, summary_ide, summary_sirof, last_update_encap, last_update_ide, last_update_sirof
+    return summary_encap, summary_ide, summary_sirof, summary_grids, last_update_encap, last_update_ide, last_update_sirof, last_update_grids
     
 if __name__ == '__main__':
     # Declare buffer size for reading from TCP command socket
