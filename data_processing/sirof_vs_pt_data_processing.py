@@ -1,4 +1,3 @@
-import argparse
 import pandas as pd
 import os
 import math
@@ -18,14 +17,10 @@ _MAX_COLOR = 200
 _ELECTRODE_DATA = pd.DataFrame({
 	"Channel Name": ['IR01', 'IR02', 'IR03', 'IR04', 'IR05', 'IR06', 'IR07', 'IR08', 'IR09', 'IR10', 
 				  'PT01', 'PT02', 'PT03', 'PT04', 'PT05', 'PT06', 'PT07', 'PT08', 'PT09', 'PT10'], 
-	"Channel Number": ['A-024', 'A-025', 'A-026', 'A-027', 'A-011', 'A-023', 'A-022', 'A-021', 'A-020', 'A-004', 
-					'A-028', 'A-029', 'A-030', 'A-031', 'A-015', 'A-019', 'A-018', 'A-017', 'A-016', 'A-000'], 
 	"Geometric Surface Area (mm^2)": [1.7, 0.8, 1.2, 1.2, 1.4, 1.4, 0.6, 0.8, 1.0, 1.2,
 								   3.2, 2.2, 2.1, 2.3, 2.1, 2.6, 2.1, 1.7, 1.6, 2.8],
 	"Pulse Amplitude (uA)": [600, 600, 600, 600, 0, 400, 400, 400, 400, 0,
 						  400, 400, 400, 400, 0, 200, 200, 200, 200, 0],
-	"Pulse Frequency (Hz)": [50, 50, 50, 50, 0, 50, 50, 50, 50, 0,
-						  50, 50, 50, 50, 0, 50, 50, 50, 50, 0],
 })
 _STIM_FREQUENCY = 50 #Hz
 _START_DATE = datetime.datetime(2024, 11, 7, 7, 43)
@@ -198,36 +193,14 @@ def perform_data_analysis(path):
 		'Real Days': [],
 		'Pulses': []
 	})
-	df_cvarea_smu = pd.DataFrame({
-		'Measurement Datetime': None,
-		'Real Days': [],
-		'IR01': [], 'IR02': [], 'IR03': [], 'IR04': [], 'IR05': [], 'IR06': [], 'IR07': [], 'IR08': [], 'IR09': [], 'IR10': [], 
-		'PT01': [], 'PT02': [], 'PT03': [], 'PT04': [], 'PT05': [], 'PT06': [], 'PT07': [], 'PT08': [], 'PT09': [], 'PT10': []
-	})
-	df_z_lcr = pd.DataFrame({
-		'Measurement Datetime': None,
-		'Real Days': [],
-		'IR01': [], 'IR02': [], 'IR03': [], 'IR04': [], 'IR05': [], 'IR06': [], 'IR07': [], 'IR08': [], 'IR09': [], 'IR10': [], 
-		'PT01': [], 'PT02': [], 'PT03': [], 'PT04': [], 'PT05': [], 'PT06': [], 'PT07': [], 'PT08': [], 'PT09': [], 'PT10': []
-	})
-	df_z_intan = pd.DataFrame({
-		'Measurement Datetime': None,
-		'Real Days': [],
-		'IR01': [], 'IR02': [], 'IR03': [], 'IR04': [], 'IR05': [], 'IR06': [], 'IR07': [], 'IR08': [], 'IR09': [], 'IR10': [], 
-		'PT01': [], 'PT02': [], 'PT03': [], 'PT04': [], 'PT05': [], 'PT06': [], 'PT07': [], 'PT08': [], 'PT09': [], 'PT10': []
-	})
-	df_cic500_scope = pd.DataFrame({
-		'Measurement Datetime': None,
-		'Real Days': [],
-		'IR01': [], 'IR02': [], 'IR03': [], 'IR04': [], 'IR05': [], 'IR06': [], 'IR07': [], 'IR08': [], 'IR09': [], 'IR10': [], 
-		'PT01': [], 'PT02': [], 'PT03': [], 'PT04': [], 'PT05': [], 'PT06': [], 'PT07': [], 'PT08': [], 'PT09': [], 'PT10': []
-	})
-	df_cic1000_intan = pd.DataFrame({
-		'Measurement Datetime': None,
-		'Real Days': [],
-		'IR01': [], 'IR02': [], 'IR03': [], 'IR04': [], 'IR05': [], 'IR06': [], 'IR07': [], 'IR08': [], 'IR09': [], 'IR10': [], 
-		'PT01': [], 'PT02': [], 'PT03': [], 'PT04': [], 'PT05': [], 'PT06': [], 'PT07': [], 'PT08': [], 'PT09': [], 'PT10': []
-	})
+
+	channel_names = _ELECTRODE_DATA["Channel Name"].tolist()
+
+	df_cvarea_smu = pd.DataFrame(columns=["Measurement Datetime", "Real Days"] + channel_names)
+	df_z_lcr = pd.DataFrame(columns=["Measurement Datetime", "Real Days"] + channel_names)
+	df_z_intan = pd.DataFrame(columns=["Measurement Datetime", "Real Days"] + channel_names)
+	df_cic500_scope = pd.DataFrame(columns=["Measurement Datetime", "Real Days"] + channel_names)
+	df_cic1000_intan = pd.DataFrame(columns=["Measurement Datetime", "Real Days"] + channel_names)
 
 	# First, process VT spreadsheet (this contains early data)
 	df_experiment, df_cic500_scope = process_vt_spreadsheet_data(f"{path}//Soak Testing - SIROF (Active).csv", df_experiment, df_cic500_scope)
@@ -253,7 +226,7 @@ def process_vt_spreadsheet_data(filepath, df_experiment, df_cic500_scope):
 	# Set row 1 to header titles
 	df.columns = df.iloc[1]
 
-	# Data starts at row 10
+	# Remove unwanted headers
 	df = df[11:]
 
 	# Loop through each time point and save data (if any)
@@ -264,7 +237,7 @@ def process_vt_spreadsheet_data(filepath, df_experiment, df_cic500_scope):
 		accel_days = accel_days.replace(",", "")
 		accel_days = float(accel_days)
 		# the others aren't formatted with commas, so can be converted directly
-		temp = float(row["Temp\r\n(deg C)"])
+		temp = float(row["Temp (deg C)"])
 		test_date = row["Date"]
 		test_time = row["Time"]
 		
@@ -364,9 +337,6 @@ def process_intan_data(path, df_experiment, df_cic1000_intan, df_z_intan):
 		real_days_end = real_days_end.total_seconds() / 60 / 60 / 24
 
 		df = pd.read_csv(f"{path}{file}")
-
-		if len(df) < 20:
-			continue
 
 		# If there was a CIC measurement, the test start is ~8 mins before save time, and we need to save to df_cic_intan
 		if not math.isnan(df.loc[0, "Charge Injection Capacity @ 1000 us (uC/cm^2)"]):

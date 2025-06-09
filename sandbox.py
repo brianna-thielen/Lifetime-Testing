@@ -1,6 +1,7 @@
 from data_processing.lcp_encapsulation_data_processing import process_encapsulation_soak_data
 from data_processing.lcp_ide_data_processing import process_ide_soak_data
 from data_processing.sirof_vs_pt_data_processing import process_coating_soak_data
+from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_soak_data
 
 import pandas as pd
 
@@ -61,27 +62,29 @@ FLAGS = {
 
 # print(summary_ide)
 
-days_sirof, cic_pt, cic_ir, z_pt, z_ir = process_coating_soak_data()
+# days_sirof, cic_pt, cic_ir, z_pt, z_ir = process_coating_soak_data(True)
 
-flagged_indices_cicpt = [i for i, c in enumerate(cic_pt) if c < FLAGS["Pt (vs SIROF) - CIC"]]
-flagged_indices_cicir = [i for i, c in enumerate(cic_ir) if c < FLAGS["SIROF (vs Pt) - CIC"]]
-flagged_indices_zpt = [i for i, z in enumerate(z_pt) if z > FLAGS["Pt (vs SIROF) - Z"]]
-flagged_indices_zir = [i for i, z in enumerate(z_ir) if z > FLAGS["SIROF (vs Pt) - Z"]]
+# flagged_indices_cicpt = [i for i, c in enumerate(cic_pt) if c < FLAGS["Pt (vs SIROF) - CIC"]]
+# flagged_indices_cicir = [i for i, c in enumerate(cic_ir) if c < FLAGS["SIROF (vs Pt) - CIC"]]
+# flagged_indices_zpt = [i for i, z in enumerate(z_pt) if z > FLAGS["Pt (vs SIROF) - Z"]]
+# flagged_indices_zir = [i for i, z in enumerate(z_ir) if z > FLAGS["SIROF (vs Pt) - Z"]]
 
-if len(flagged_indices_cicpt) + len(flagged_indices_cicir) + len(flagged_indices_zpt) + len(flagged_indices_zir) == 0:
-    summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, all parts within expected range."
-else:
-    sirof = GROUPS["SIROF vs Pt"][0:10]
-    pt = GROUPS["SIROF vs Pt"][10:20]
+# if len(flagged_indices_cicpt) + len(flagged_indices_cicir) + len(flagged_indices_zpt) + len(flagged_indices_zir) == 0:
+#     summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, all parts within expected range."
+# else:
+#     sirof = GROUPS["SIROF vs Pt"][0:10]
+#     pt = GROUPS["SIROF vs Pt"][10:20]
 
-    failing_devices_cic = [pt[i] for i in flagged_indices_cicpt] + [sirof[i] for i in flagged_indices_cicir]
-    failing_devices_z = [pt[i] for i in flagged_indices_zpt] + [sirof[i] for i in flagged_indices_zir]
+#     failing_devices_cic = [pt[i] for i in flagged_indices_cicpt] + [sirof[i] for i in flagged_indices_cicir]
+#     failing_devices_z = [pt[i] for i in flagged_indices_zpt] + [sirof[i] for i in flagged_indices_zir]
 
-    if len(failing_devices_cic) == 0:
-        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
-    elif len(failing_devices_z) == 0:
-        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
-    else:
-        summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
+#     if len(failing_devices_cic) == 0:
+#         summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
+#     elif len(failing_devices_z) == 0:
+#         summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
+#     else:
+#         summary_sirof = f"LCP IDE test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
 
-    print(summary_sirof)
+#     print(summary_sirof)
+
+days_grids, cic_grids, z_grids = process_lcp_pt_grids_soak_data(True)

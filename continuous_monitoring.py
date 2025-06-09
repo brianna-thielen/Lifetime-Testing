@@ -187,6 +187,11 @@ def main():
     # Set the last check to the hour before the first test to trigger a test immediately if we're at test time
     last_check = min(IMPEDANCE_TEST_TIME) - 1
 
+    # Set the last update to year 0, will trigger slack update every year thereafter
+    last_update_encap = 0
+    last_update_ide = 0
+    last_update_sirof = 0
+
     try:
         while run_test:
             current_hour = datetime.datetime.now().hour
@@ -209,7 +214,6 @@ def main():
                 # Measure impedance and temperature
                 print("Stimulation off. Running impedance check for SIROF parts.")
                 impedance_temperature_cic, filename = measure_intan_impedance(rhx, frequencies, impedance_temperature_cic)
-
 
                 # Measure CIC and max currents
                 impedance_temperature_cic = measure_vt(rhx, CHANNELS, SAMPLES, sample_frequency, GEOM_SURF_AREAS, impedance_temperature_cic)
@@ -237,69 +241,16 @@ def main():
                 last_check = current_hour
 
                 # Process data to flag any issues
-                # Encapsulation data
-                days_encap, rh_cap_sensors, rh_res_sensors = process_encapsulation_soak_data()
-                flagged_indices_r = [i for i, rh in enumerate(rh_res_sensors) if rh > FLAGS["LCP Encapsulation - Res"]]
-                flagged_indices_c = [i for i, rh in enumerate(rh_cap_sensors) if rh > FLAGS["LCP Encapsulation - Cap"]]
+                summary_encap, summary_ide, summary_sirof, last_update_encap, last_update_ide, last_update_sirof = process_all_data(last_update_encap, last_update_ide, last_update_sirof)
 
-                if len(flagged_indices_r) + len(flagged_indices_c) == 0:
-                    summary_encap = f"Encapsulation test at {round(days_encap/365.25, 1)} accelerated years, all parts within expected range."
-                else:
-                    rh_sensors_r = GROUPS["LCP Encapsulation"][0:2]
-                    rh_sensors_c = GROUPS["LCP Encapsulation"][2:5]
-                    failing_devices = [rh_sensors_r[i] for i in flagged_indices_r] + [rh_sensors_c[i] for i in flagged_indices_c]
-                    summary_encap = f"LCP encapsulation test at {round(days_encap/365.25, 1)} accelerated years, {', '.join(failing_devices)} above expected range."
-
-                # IDE data
-                days_ide, z_IDE_25, z_IDE_100, norm_IDE_25, norm_IDE_100 = process_ide_soak_data()
-
-                flagged_indices_z25 = [i for i, z in enumerate(z_IDE_25) if z < FLAGS["LCP IDEs - value"]]
-                flagged_indices_z100 = [i for i, z in enumerate(z_IDE_100) if z < FLAGS["LCP IDEs - value"]]
-                flagged_indices_norm25 = [i for i, n in enumerate(norm_IDE_25) if n < FLAGS["LCP IDEs - change"]]
-                flagged_indices_norm100 = [i for i, n in enumerate(norm_IDE_100) if n < FLAGS["LCP IDEs - change"]]
-
-                flagged_indices_25 = [x for x in flagged_indices_z25 if x in flagged_indices_norm25]
-                flagged_indices_100 = [x for x in flagged_indices_z100 if x in flagged_indices_norm100]
-
-                if len(flagged_indices_25) + len(flagged_indices_100) == 0:
-                    summary_ide = f"LCP IDE test at {round(days_ide/365.25, 1)} accelerated years, all parts within expected range."
-                else:
-                    ides_25 = GROUPS["LCP IDEs"][0:8]
-                    ides_100 = GROUPS["LCP IDEs"][8:16]
-
-                    failing_devices = [ides_25[i] for i in flagged_indices_25] + [ides_100[i] for i in flagged_indices_100]
-                    summary_ide = f"LCP IDE test at {round(days_ide/365.25, 1)} accelerated years, {', '.join(failing_devices)} below expected range."
-
-                # SIROF vs Pt data
-                days_sirof, cic_pt, cic_ir, z_pt, z_ir = process_coating_soak_data()
-
-                flagged_indices_cicpt = [i for i, c in enumerate(cic_pt) if c < FLAGS["Pt (vs SIROF) - CIC"]]
-                flagged_indices_cicir = [i for i, c in enumerate(cic_ir) if c < FLAGS["SIROF (vs Pt) - CIC"]]
-                flagged_indices_zpt = [i for i, z in enumerate(z_pt) if z > FLAGS["Pt (vs SIROF) - Z"]]
-                flagged_indices_zir = [i for i, z in enumerate(z_ir) if z > FLAGS["SIROF (vs Pt) - Z"]]
-
-                if len(flagged_indices_cicpt) + len(flagged_indices_cicir) + len(flagged_indices_zpt) + len(flagged_indices_zir) == 0:
-                    summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, all parts within expected range."
-                else:
-                    sirof = GROUPS["SIROF vs Pt"][0:10]
-                    pt = GROUPS["SIROF vs Pt"][10:20]
-
-                    failing_devices_cic = [pt[i] for i in flagged_indices_cicpt] + [sirof[i] for i in flagged_indices_cicir]
-                    failing_devices_z = [pt[i] for i in flagged_indices_zpt] + [sirof[i] for i in flagged_indices_zir]
-
-                    if len(failing_devices_cic) == 0:
-                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
-                    elif len(failing_devices_z) == 0:
-                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
-                    else:
-                        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
-
+                # Print summary and notify slack (if applicable)
                 print(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}.")
                 print(summary_encap)
                 print(summary_ide)
                 print(summary_sirof)
                 print("Press ctrl-c to stop stimulation and testing loop.")
-                notify_slack(f"Testing complete at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on. \n{summary_encap} \n{summary_ide} \n{summary_sirof}")
+
+                # Write a heartbeat with current time to save progress in case of crash
                 write_heartbeat()
 
             else:
@@ -357,7 +308,6 @@ def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_wi
         if pulse_amplitude == 0:
             rhx.disable_stim(channel)
 
-
 def measure_temperature():
     temp_sensor = phidget(TEMP_SENSOR_DRY_BATH_CHANNEL)
     temp_sensor.open_connection()
@@ -368,7 +318,6 @@ def measure_temperature():
     temp_sensor.close()
 
     return temperature
-
 
 def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
     impedances = []
@@ -433,12 +382,14 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
             "Temperature (Dry Bath)": [temperature_i] * len(frequencies_i),
         }
         freq_data_df = pd.DataFrame(freq_data)
+
+        for group, devices in GROUPS.items():
+            if sample_i in devices:
+                file_path = f"./data/{group}/intan-eis/EIS_{sample_i}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
         
-        file_path = f"./data/SIROF vs Pt/intan-eis/EIS_{sample_i}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
         freq_data_df.to_csv(file_path, index=False)
     
     return impedance_temperature_cic, filename
-
 
 def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance_temperature_cic):
     """"
@@ -586,10 +537,8 @@ def calcluate_ep(vt_data):
 
     return ep
 
-
 def find_closest_timestamp(time, time_list):
     temp_time = time_list < time
-
 
 def generate_frequencies_to_test():
     """
@@ -611,7 +560,6 @@ def generate_frequencies_to_test():
     frequencies = np.sort(frequencies).tolist()
 
     return frequencies
-
 
 def collect_impedance_vs_frequency(frequencies):
     """
@@ -696,7 +644,80 @@ def collect_impedance_vs_frequency(frequencies):
     lcx100.close()
     mux.close()
 
+def process_all_data(last_update_encap, last_update_ide, last_update_sirof):
+    # Processes all soak data and flags any issues.
+    # Encapsulation data
+    days_encap, rh_cap_sensors, rh_res_sensors = process_encapsulation_soak_data()
+    flagged_indices_r = [i for i, rh in enumerate(rh_res_sensors) if rh > FLAGS["LCP Encapsulation - Res"]]
+    flagged_indices_c = [i for i, rh in enumerate(rh_cap_sensors) if rh > FLAGS["LCP Encapsulation - Cap"]]
 
+    if len(flagged_indices_r) + len(flagged_indices_c) == 0:
+        summary_encap = f"Encapsulation test at {round(days_encap/365.25, 1)} accelerated years, all parts within expected range."
+    else:
+        rh_sensors_r = GROUPS["LCP Encapsulation"][0:2]
+        rh_sensors_c = GROUPS["LCP Encapsulation"][2:5]
+        failing_devices = [rh_sensors_r[i] for i in flagged_indices_r] + [rh_sensors_c[i] for i in flagged_indices_c]
+        summary_encap = f"LCP encapsulation test at {round(days_encap/365.25, 1)} accelerated years, {', '.join(failing_devices)} above expected range."
+
+    # IDE data
+    days_ide, z_IDE_25, z_IDE_100, norm_IDE_25, norm_IDE_100 = process_ide_soak_data()
+
+    flagged_indices_z25 = [i for i, z in enumerate(z_IDE_25) if z < FLAGS["LCP IDEs - value"]]
+    flagged_indices_z100 = [i for i, z in enumerate(z_IDE_100) if z < FLAGS["LCP IDEs - value"]]
+    flagged_indices_norm25 = [i for i, n in enumerate(norm_IDE_25) if n < FLAGS["LCP IDEs - change"]]
+    flagged_indices_norm100 = [i for i, n in enumerate(norm_IDE_100) if n < FLAGS["LCP IDEs - change"]]
+
+    flagged_indices_25 = [x for x in flagged_indices_z25 if x in flagged_indices_norm25]
+    flagged_indices_100 = [x for x in flagged_indices_z100 if x in flagged_indices_norm100]
+
+    if len(flagged_indices_25) + len(flagged_indices_100) == 0:
+        summary_ide = f"LCP IDE test at {round(days_ide/365.25, 1)} accelerated years, all parts within expected range."
+    else:
+        ides_25 = GROUPS["LCP IDEs"][0:8]
+        ides_100 = GROUPS["LCP IDEs"][8:16]
+
+        failing_devices = [ides_25[i] for i in flagged_indices_25] + [ides_100[i] for i in flagged_indices_100]
+        summary_ide = f"LCP IDE test at {round(days_ide/365.25, 1)} accelerated years, {', '.join(failing_devices)} below expected range."
+
+    # SIROF vs Pt data
+    days_sirof, cic_pt, cic_ir, z_pt, z_ir = process_coating_soak_data()
+
+    flagged_indices_cicpt = [i for i, c in enumerate(cic_pt) if c < FLAGS["Pt (vs SIROF) - CIC"]]
+    flagged_indices_cicir = [i for i, c in enumerate(cic_ir) if c < FLAGS["SIROF (vs Pt) - CIC"]]
+    flagged_indices_zpt = [i for i, z in enumerate(z_pt) if z > FLAGS["Pt (vs SIROF) - Z"]]
+    flagged_indices_zir = [i for i, z in enumerate(z_ir) if z > FLAGS["SIROF (vs Pt) - Z"]]
+
+    if len(flagged_indices_cicpt) + len(flagged_indices_cicir) + len(flagged_indices_zpt) + len(flagged_indices_zir) == 0:
+        summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, all parts within expected range."
+    else:
+        sirof = GROUPS["SIROF vs Pt"][0:10]
+        pt = GROUPS["SIROF vs Pt"][10:20]
+
+        failing_devices_cic = [pt[i] for i in flagged_indices_cicpt] + [sirof[i] for i in flagged_indices_cicir]
+        failing_devices_z = [pt[i] for i in flagged_indices_zpt] + [sirof[i] for i in flagged_indices_zir]
+
+        if len(failing_devices_cic) == 0:
+            summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_z)} above expected Z range."
+        elif len(failing_devices_z) == 0:
+            summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range."
+        else:
+            summary_sirof = f"SIROF vs Pt test at {round(days_sirof/365.25, 1)} accelerated years, {', '.join(failing_devices_cic)} below expected CIC range, {', '.join(failing_devices_z)} above expected Z range."
+
+    # If we reach a next year, notify slack
+    if round(days_encap/365.25) > last_update_encap:
+        last_update_encap = round(days_encap/365.25)
+        notify_slack(summary_encap)
+
+    if round(days_ide/365.25) > last_update_ide:
+        last_update_ide = round(days_ide/365.25)
+        notify_slack(summary_ide)
+
+    if round(days_sirof/365.25) > last_update_sirof:
+        last_update_sirof = round(days_sirof/365.25)
+        notify_slack(summary_sirof)
+
+    return summary_encap, summary_ide, summary_sirof, last_update_encap, last_update_ide, last_update_sirof
+    
 if __name__ == '__main__':
     # Declare buffer size for reading from TCP command socket
     # This is the maximum number of bytes expected for 1 read. 1024 is plenty
