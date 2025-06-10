@@ -23,6 +23,7 @@ def process_encapsulation_soak_data(plot_on=False):
 		cols=1,
 		row_heights=[0.7, 0.3],
 	)
+	fig_rhtemp.update_layout(title_text="LCP Encapsulated RH Sensors: RH and Temperature vs Time")
 
 	# Process data
 	df_encap = process_rh_data(DATA_PATH)
@@ -324,7 +325,7 @@ def process_lcr_data(path, df_encap):
 def plot_rh_data(df_encap, fig_rhtemp):
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: 25 um LCP (C2) (%)"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(255,100,100)"),
@@ -337,7 +338,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: 100 um LCP (C1) (%)"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(150,150,255)"),
@@ -350,7 +351,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: 100 um LCP (C2) (%)"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(100,100,255)"),
@@ -363,7 +364,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: 100 um LCP (R1) (%)"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,255)"),
@@ -376,7 +377,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: 100 um LCP (R2) (%)"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,200)"),
@@ -389,7 +390,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["RH: ambient"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(200,200,200)"),
@@ -402,7 +403,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 	# Temperature
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["Temperature (C)"],
 			mode="lines",
 			line=dict(width=1, dash='dash', color=f"rgb(170,120,200)"),
@@ -415,7 +416,7 @@ def plot_rh_data(df_encap, fig_rhtemp):
 
 	fig_rhtemp.add_trace(
 		go.Scatter(
-			x=df_encap["Accel. Days (Total)"],
+			x=df_encap["Accel. Days (Total)"]/365.25,
 			y=df_encap["Temp: ambient"],
 			mode="lines",
 			line=dict(width=1, dash='dash', color=f"rgb(200,200,200)"),
@@ -426,11 +427,11 @@ def plot_rh_data(df_encap, fig_rhtemp):
 		col=1,
 	)
 
-	fig_rhtemp.update_xaxes(title_text="Accelerated Time (days)")
+	fig_rhtemp.update_xaxes(title_text="Accelerated Time (years)")
 	fig_rhtemp.update_yaxes(title_text="Relative Humidity (%)", row=1, col=1)
 	fig_rhtemp.update_yaxes(title_text="Temperature (C)", row=2, col=1)
 
-	add_vert_line(fig_rhtemp, 2, 1, 875.83, "PBS Replaced")
+	add_vert_line(fig_rhtemp, 2, 1, 875.83/365.25, "PBS Replaced")
 
 def add_vert_line(fig, rows, cols, xline, label):
 	for r in range(1, rows+1):

@@ -61,7 +61,7 @@ def process_ide_soak_data(plot_on=False):
 		x_title="Frequency (Hz)",
 		y_title="Left/Solid: Impedance Magnitude (Ohms)\nRight/Dashed: Impedance Phase (deg)"
 	)
-	fig_eis.update_layout(title_text="EIS Curve vs Time (light=day 0, dark=most recent)")
+	fig_eis.update_layout(title_text="LCP IDEs: EIS Curves vs Time (light=day 0, dark=most recent)")
 
 	# fig_impedance: 1k impedance vs time 
 	# top: individual traces; bottom: average; left: impedance; right: normalized impedance to t=0
@@ -74,10 +74,10 @@ def process_ide_soak_data(plot_on=False):
 			"Average",
 			"Average (normalized)"
 		),
-		x_title="Accelerated Time (days)",
+		x_title="Accelerated Time (years)",
 		y_title="Impedance Magnitude (ohms)"
 	)
-	fig_impedance.update_layout(title_text="1 kHz Impedance Magnitude vs Time")
+	fig_impedance.update_layout(title_text="LCP IDEs: 1 kHz Impedance Magnitude vs Time")
 
 	# 3: EIS for day 0 for all electrodes (individual traces)
 	fig_eis_day0 = make_subplots(
@@ -85,7 +85,7 @@ def process_ide_soak_data(plot_on=False):
 		cols=1,
 		specs=[[{"secondary_y": True}]],
 	)
-	fig_eis_day0.update_layout(title_text="Initial EIS curve for All Electrodes")
+	fig_eis_day0.update_layout(title_text="LCP IDEs: Initial EIS curve for All Electrodes")
 
 	# Pull data into df_z
 	df_z = perform_data_analysis(DATA_PATH)
@@ -155,7 +155,6 @@ def perform_data_analysis(path):
 def process_eis_data(df_z, file, path):
 	"""
 	"""
-	print(file)
 	# Find timestamp
 	i = len(file)
 	year = int(file[i-18:i-14])
@@ -429,7 +428,7 @@ def plot_impedance(fig_impedance, df_z):
 		# Plot individual traces, left is impedance, right is normalized impedance
 		fig_impedance.add_trace(
 			go.Scatter(
-				x=accel_days,
+				x=[d/365.25 for d in accel_days],
 				y=z,
 				mode="lines",
 				line=dict(width=1, color=colorrgb),
@@ -440,7 +439,7 @@ def plot_impedance(fig_impedance, df_z):
 		)
 		fig_impedance.add_trace(
 			go.Scatter(
-				x=accel_days,
+				x=[d/365.25 for d in accel_days],
 				y=z_norm,
 				mode="lines",
 				line=dict(width=1, color=colorrgb),
@@ -498,7 +497,7 @@ def plot_impedance(fig_impedance, df_z):
 	# Plot averages, left is average, right is normalized average
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=df_100_mean.index,
+			x=[d/365.25 for d in df_100_mean.index],
 			y=df_100_mean.values,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -510,7 +509,7 @@ def plot_impedance(fig_impedance, df_z):
 	)
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=df_100_norm["Accelerated Days"],
+			x=[d/365.25 for d in df_100_norm["Accelerated Days"]],
 			y=df_100_norm["Normalized Mean"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -524,7 +523,7 @@ def plot_impedance(fig_impedance, df_z):
 
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=df_25_mean.index,
+			x=[d/365.25 for d in df_25_mean.index],
 			y=df_25_mean.values,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -536,7 +535,7 @@ def plot_impedance(fig_impedance, df_z):
 	)
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=df_25_norm["Accelerated Days"],
+			x=[d/365.25 for d in df_25_norm["Accelerated Days"]],
 			y=df_25_norm["Normalized Mean"],
 			mode="lines",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -552,9 +551,9 @@ def plot_impedance(fig_impedance, df_z):
 	fig_impedance.update_yaxes(type="log", tick0=100, dtick=1, range=[2, 8], row=2, col=1)
 	fig_impedance.update_yaxes(type="log", tick0=0, dtick=1, range=[-3, 3], row=1, col=2)
 	fig_impedance.update_yaxes(type="log", tick0=0, dtick=1, range=[-3, 3], row=2, col=2)
-	fig_impedance.update_xaxes(range=[0, max(accel_days)])
+	fig_impedance.update_xaxes(range=[0, max(accel_days)/365.25])
 
-	add_vert_line(fig_impedance, 2, 2, 785.07, "PBS Replaced")
+	add_vert_line(fig_impedance, 2, 2, 785.07/365.25, "PBS Replaced")
 
 	return df_25_grouped, df_100_grouped
 

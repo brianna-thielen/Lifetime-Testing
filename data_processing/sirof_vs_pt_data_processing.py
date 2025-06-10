@@ -55,7 +55,7 @@ def process_coating_soak_data(plot_on=False):
 		x_title="Voltage (V)",
 		y_title="Current Density (A/mm^2)"
 	)
-	fig_cv.update_layout(title_text="CV Curve vs Time (light=day 0, dark=most recent)")
+	fig_cv.update_layout(title_text="SIROF vs Platinum: CV Curve vs Time (light=day 0, dark=most recent)")
 
 	# fig_cvarea: Area vs time for all electrodes 
 	# top: individual traces; bottom: average normalized to t=0
@@ -67,7 +67,7 @@ def process_coating_soak_data(plot_on=False):
 			"Average +/- SD (normalized to t=0)"
 		)
 	)
-	fig_cvarea.update_layout(title_text="CV Area vs Time")
+	fig_cvarea.update_layout(title_text="SIROF vs Platinum: CV Area vs Time")
 
 	# fig_eis (4x5 subplots): EIS vs time for each electrode individually
 	fig_eis = make_subplots(
@@ -86,7 +86,7 @@ def process_coating_soak_data(plot_on=False):
 		x_title="Frequency (Hz)",
 		y_title="Left/Solid: Impedance Magnitude (Ohms)\nRight/Dashed: Impedance Phase (deg)"
 	)
-	fig_eis.update_layout(title_text="EIS Curve vs Time (light=day 0, dark=most recent)")
+	fig_eis.update_layout(title_text="SIROF vs Platinum: EIS Curve vs Time (light=day 0, dark=most recent)")
 
 	# fig_impedance: 1k impedance vs time 
 	# top: individual traces; bottom: average normalized to t=0; left: manual measurements (LCR); right: intan measurements
@@ -99,10 +99,10 @@ def process_coating_soak_data(plot_on=False):
 			"Average +/- SD (LCR)",
 			"Average (Intan)"
 		),
-		x_title="Accelerated Time (days)",
+		x_title="Accelerated Time (years)",
 		y_title="Impedance Magnitude * GSA (ohms*mm^2)"
 	)
-	fig_impedance.update_layout(title_text="1 kHz Impedance Magnitude vs Time")
+	fig_impedance.update_layout(title_text="SIROF vs Platinum: 1 kHz Impedance Magnitude vs Time")
 
 	# fig_cic: CIC vs time
 	# top: individual traces; bottom: average normalized to t=0; left: manual measurements (scope, 500 us pulse); right: intan measurements (1000 us pulse)
@@ -115,21 +115,21 @@ def process_coating_soak_data(plot_on=False):
 			"Average +/- SD w/ 500 us pulse (scope)",
 			"Average w/ 1000 us pulse (Intan)"
 		),
-		x_title="Accelerated Time (days)",
+		x_title="Accelerated Time (years)",
 		y_title="Charge Injection Capacity (uC/cm^2)"
 	)
-	fig_cic.update_layout(title_text="Charge Injection Capacity vs Time")
+	fig_cic.update_layout(title_text="SIROF vs Platinum: Charge Injection Capacity vs Time")
 
 	# fig_cv_day0: CV for day 0 for all electrodes (individual traces)
 	fig_cv_day0 = go.Figure()
-	fig_cv_day0.update_layout(title_text="Initial CV curve for All Electrodes")
+	fig_cv_day0.update_layout(title_text="SIROF vs Platinum: Initial CV curve for All Electrodes")
 
 	# fig_eis_day0: EIS for day 0 for all electrodes (individual traces)
 	fig_eis_day0 = make_subplots(
 		rows=2, 
 		cols=1,
 	)
-	fig_eis_day0.update_layout(title_text="Initial EIS curve for All Electrodes")
+	fig_eis_day0.update_layout(title_text="SIROF vs Platinum: Initial EIS curve for All Electrodes")
 
 	df_experiment, df_cvarea_smu, df_z_lcr, df_z_intan, df_cic500_scope, df_cic1000_intan = perform_data_analysis(DATA_PATH)
 
@@ -857,7 +857,7 @@ def plot_cvarea(fig_cvarea, df_experiment, df_cvarea_smu):
 		# Plot individual trace
 		fig_cvarea.add_trace(
 			go.Scatter(
-				x=accel_days,
+				x=[d/365.25 for d in accel_days],
 				y=cv_area,
 				mode="lines+markers",
 				line=dict(width=1, dash=linetype, color=colorrgb),
@@ -878,7 +878,7 @@ def plot_cvarea(fig_cvarea, df_experiment, df_cvarea_smu):
 	# Plot pt average
 	fig_cvarea.add_trace(
 		go.Scatter(
-			x=accel_days,
+			x=[d/365.25 for d in accel_days],
 			y=average_pt,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -892,7 +892,7 @@ def plot_cvarea(fig_cvarea, df_experiment, df_cvarea_smu):
 	# Plot ir average
 	fig_cvarea.add_trace(
 		go.Scatter(
-			x=accel_days,
+			x=[d/365.25 for d in accel_days],
 			y=average_ir,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -904,11 +904,11 @@ def plot_cvarea(fig_cvarea, df_experiment, df_cvarea_smu):
 	)
 
 	fig_cvarea.update_yaxes(title_text="CV Area (W/mm^2)")
-	fig_cvarea.update_xaxes(title_text="Accelerated Time (days)", range=[0, max(accel_days)])
+	fig_cvarea.update_xaxes(title_text="Accelerated Time (years)", range=[0, max(accel_days)/365.25])
 
 	# Add vertical line with label where I increased stim and replaced the saline
-	add_vert_line(fig_cvarea, 2, 1, 423.62, "Stim Increased")
-	add_vert_line(fig_cvarea, 2, 1, 982.98, "PBS Replaced")
+	add_vert_line(fig_cvarea, 2, 1, 423.62/365.25, "Stim Increased")
+	add_vert_line(fig_cvarea, 2, 1, 982.98/365.25, "PBS Replaced")
 
 def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	"""
@@ -1041,7 +1041,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 		# Plot individual traces, left is lcr, right is intan
 		fig_impedance.add_trace(
 			go.Scatter(
-				x=accel_days_lcr,
+				x=[d/365.25 for d in accel_days_lcr],
 				y=z_lcr,
 				mode="lines+markers",
 				line=dict(width=1, dash=linetype, color=colorrgb),
@@ -1052,7 +1052,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 		)
 		fig_impedance.add_trace(
 			go.Scatter(
-				x=accel_days_intan,
+				x=[d/365.25 for d in accel_days_intan],
 				y=z_intan,
 				mode="lines",
 				line=dict(width=1, dash=linetype, color=colorrgb),
@@ -1078,7 +1078,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	# Plot pt average, left is lcr, right is intan
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=accel_days_lcr,
+			x=[d/365.25 for d in accel_days_lcr],
 			y=average_pt_lcr,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -1090,7 +1090,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	)
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=accel_days_intan,
+			x=[d/365.25 for d in accel_days_intan],
 			y=average_pt_intan,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -1105,7 +1105,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	# Plot ir average, left is lcr, right is intan
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=accel_days_lcr,
+			x=[d/365.25 for d in accel_days_lcr],
 			y=average_ir_lcr,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -1117,7 +1117,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	)
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=accel_days_intan,
+			x=[d/365.25 for d in accel_days_intan],
 			y=average_ir_intan,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -1130,11 +1130,11 @@ def plot_impedance(fig_impedance, df_experiment, df_z_lcr, df_z_intan):
 	)
 
 	fig_impedance.update_yaxes(type="log", tick0=100, dtick=1, range=[1, 6])
-	fig_impedance.update_xaxes(range=[0, max(accel_days_intan+accel_days_lcr)])
+	fig_impedance.update_xaxes(range=[0, max(accel_days_intan+accel_days_lcr)/365.25])
 
 	# Add vertical line with label where I increased stim and replaced the saline
-	add_vert_line(fig_impedance, 2, 2, 423.62, "Stim Increased")
-	add_vert_line(fig_impedance, 2, 2, 982.98, "PBS Replaced")
+	add_vert_line(fig_impedance, 2, 2, 423.62/365.25, "Stim Increased")
+	add_vert_line(fig_impedance, 2, 2, 982.98/365.25, "PBS Replaced")
 
 def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 	"""
@@ -1261,10 +1261,10 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 		else:
 			colorrgb = f"rgb({colorn},{colorn},{colorn})"
 		
-		# Plot individual traces, left is lcr, right is intan
+		# Plot individual traces, left is scope, right is intan
 		fig_cic.add_trace(
 			go.Scatter(
-				x=accel_days_scope,
+				x=[d/365.25 for d in accel_days_scope],
 				y=cic500_scope,
 				mode="lines+markers",
 				line=dict(width=1, dash=linetype, color=colorrgb),
@@ -1275,7 +1275,7 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 		)
 		fig_cic.add_trace(
 			go.Scatter(
-				x=accel_days_intan,
+				x=[d/365.25 for d in accel_days_intan],
 				y=cic1000_intan,
 				mode="lines",
 				line=dict(width=1, dash=linetype, color=colorrgb),
@@ -1298,10 +1298,10 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 	average_ir_intan = df_ir_intan.mean(axis=1)
 	sd_ir_intan = df_ir_intan.std(axis=1)
 
-	# Plot pt average, left is lcr, right is intan
+	# Plot pt average, left is scope, right is intan
 	fig_cic.add_trace(
 		go.Scatter(
-			x=accel_days_scope,
+			x=[d/365.25 for d in accel_days_scope],
 			y=average_pt_scope,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -1313,7 +1313,7 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 	)
 	fig_cic.add_trace(
 		go.Scatter(
-			x=accel_days_intan,
+			x=[d/365.25 for d in accel_days_intan],
 			y=average_pt_intan,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(0,0,155)"),
@@ -1325,10 +1325,10 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 		col=2,
 	)
 
-	# Plot ir average, left is lcr, right is intan
+	# Plot ir average, left is scope, right is intan
 	fig_cic.add_trace(
 		go.Scatter(
-			x=accel_days_scope,
+			x=[d/365.25 for d in accel_days_scope],
 			y=average_ir_scope,
 			mode="lines+markers",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -1340,7 +1340,7 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 	)
 	fig_cic.add_trace(
 		go.Scatter(
-			x=accel_days_intan,
+			x=[d/365.25 for d in accel_days_intan],
 			y=average_ir_intan,
 			mode="lines",
 			line=dict(width=1, color=f"rgb(155,0,0)"),
@@ -1353,11 +1353,11 @@ def plot_cic(fig_cic, df_experiment, df_cic500_scope, df_cic1000_intan):
 	)
 
 	fig_cic.update_yaxes(range=[0, 1000])
-	fig_cic.update_xaxes(range=[0, max(accel_days_intan+accel_days_scope)])
+	fig_cic.update_xaxes(range=[0, max(accel_days_intan+accel_days_scope)/365.25])
 
 	# Add vertical line with label where I increased stim and replaced the saline
-	add_vert_line(fig_cic, 2, 2, 423.62, "Stim Increased")
-	add_vert_line(fig_cic, 2, 2, 982.98, "PBS Replaced")
+	add_vert_line(fig_cic, 2, 2, 423.62/365.25, "Stim Increased")
+	add_vert_line(fig_cic, 2, 2, 982.98/365.25, "PBS Replaced")
 	
 
 def add_vert_line(fig, rows, cols, xline, label):

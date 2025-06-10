@@ -51,25 +51,25 @@ def process_lcp_pt_grids_soak_data(plot_on=False):
 		x_title="Frequency (Hz)",
 		y_title="Left/Solid: Impedance Magnitude (Ohms)\nRight/Dashed: Impedance Phase (deg)"
 	)
-	fig_eis.update_layout(title_text="EIS Curve vs Time (light=day 0, dark=most recent)")
+	fig_eis.update_layout(title_text="LCP Platinum Grids: EIS Curve vs Time (light=day 0, dark=most recent)")
 
 	# fig_impedance: 1k impedance vs time 
 	fig_impedance = make_subplots(
 		rows=1,
 		cols=1,
-		x_title="Accelerated Time (days)",
+		x_title="Accelerated Time (years)",
 		y_title="Impedance Magnitude (ohms)"
 	)
-	fig_impedance.update_layout(title_text="1 kHz Impedance Magnitude vs Time")
+	fig_impedance.update_layout(title_text="LCP Platinum Grids: 1 kHz Impedance Magnitude vs Time")
 
 	# fig_cic: CIC vs time
 	fig_cic = make_subplots(
 		rows=1,
 		cols=1,
-		x_title="Accelerated Time (days)",
+		x_title="Accelerated Time (years)",
 		y_title="Charge Injection Capacity (uC/cm^2)"
 	)
-	fig_cic.update_layout(title_text="Charge Injection Capacity vs Time (1000 us pulse)")
+	fig_cic.update_layout(title_text="LCP Platinum Grids: Charge Injection Capacity vs Time (1000 us pulse)")
 
 	df_experiment, df_z, df_cic1000 = perform_data_analysis(DATA_PATH)
 
@@ -515,7 +515,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z):
 		# Plot individual traces
 		fig_impedance.add_trace(
 			go.Scatter(
-				x=accel_days,
+				x=[d/365.25 for d in accel_days],
 				y=z,
 				mode="lines",
 				line=dict(width=1, dash=linetype),
@@ -532,7 +532,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z):
 	# Plot pt average, left is lcr, right is intan
 	fig_impedance.add_trace(
 		go.Scatter(
-			x=accel_days,
+			x=[d/365.25 for d in accel_days],
 			y=average,
 			mode="lines",
 			line=dict(width=2, color=f"rgb(0,0,0)"),
@@ -544,7 +544,7 @@ def plot_impedance(fig_impedance, df_experiment, df_z):
 	)
 
 	fig_impedance.update_yaxes(type="log", tick0=100, dtick=1, range=[1, 6])
-	fig_impedance.update_xaxes(range=[0, max(accel_days)])
+	fig_impedance.update_xaxes(range=[0, max(accel_days)/365.25])
 
 def plot_cic(fig_cic, df_experiment, df_cic1000):
 	"""
@@ -627,7 +627,7 @@ def plot_cic(fig_cic, df_experiment, df_cic1000):
 		# Plot individual traces
 		fig_cic.add_trace(
 			go.Scatter(
-				x=accel_days,
+				x=[d/365.25 for d in accel_days],
 				y=cic1000,
 				mode="lines",
 				line=dict(width=1, dash=linetype),
@@ -644,7 +644,7 @@ def plot_cic(fig_cic, df_experiment, df_cic1000):
 	# Plot average
 	fig_cic.add_trace(
 		go.Scatter(
-			x=accel_days,
+			x=[d/365.25 for d in accel_days],
 			y=average,
 			mode="lines",
 			line=dict(width=2, color=f"rgb(0,0,0)"),
@@ -656,7 +656,7 @@ def plot_cic(fig_cic, df_experiment, df_cic1000):
 	)
 
 	# fig_cic.update_yaxes(range=[0, 1000])
-	fig_cic.update_xaxes(range=[0, max(accel_days)])
+	fig_cic.update_xaxes(range=[0, max(accel_days)/365.25])
 	
 def add_vert_line(fig, rows, cols, xline, label):
 	for r in range(1, rows+1):
