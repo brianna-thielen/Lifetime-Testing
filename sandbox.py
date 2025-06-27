@@ -3,6 +3,7 @@ import os
 import datetime
 import json
 import math
+import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 # from support_functions import measure_temperature
@@ -30,4 +31,5 @@ group = 'b'
 flagged_samples_f[flag] = flagged_samples_g
 flagged_samples[group] = flagged_samples_f
 
-print(flagged_samples)
+payload = {'text': 'test'}
+requests.post("https://hooks.slack.com/services/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", json=payload)
