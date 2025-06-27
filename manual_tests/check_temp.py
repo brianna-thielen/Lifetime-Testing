@@ -1,5 +1,11 @@
-from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
+
 import time
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
 
 TEMP_SENSOR_DRY_BATH_CHANNEL = 2
 THERMOCOUPLE_TYPE_J = 1
