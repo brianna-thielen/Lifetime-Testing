@@ -1,0 +1,33 @@
+{
+    "start_date": "2024-11-7 7:43",
+    "flagged_dates": {
+        "increased stimulation 3x on samples 3/4/8/9": "1-10-25 11:16",
+        "replaced PBS": "2025-3-27 17:50"
+    },
+    "samples": {
+        "PT01": {"intan_channel": "d-008", "geom_surf_area": 3.2472, "pulse_amplitude": 400,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 0,    "temp_sensor_id": 2},
+        "PT02": {"intan_channel": "d-009", "geom_surf_area": 2.1784, "pulse_amplitude": 400,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 1887, "temp_sensor_id": 2},
+        "PT03": {"intan_channel": "d-010", "geom_surf_area": 2.0868, "pulse_amplitude": 1200, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 122,  "temp_sensor_id": 2},
+        "PT04": {"intan_channel": "d-011", "geom_surf_area": 2.3458, "pulse_amplitude": 1200, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 860,  "temp_sensor_id": 2},
+        "PT05": {"intan_channel": "d-005", "geom_surf_area": 2.0832, "pulse_amplitude": 0,    "pulse_width": 0,   "pulse_interphase": 0,  "pulse_frequency": 0,  "initial_i_max": 1178, "temp_sensor_id": 2},
+        "PT06": {"intan_channel": "d-012", "geom_surf_area": 2.6302, "pulse_amplitude": 200,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 591,  "temp_sensor_id": 2},
+        "PT07": {"intan_channel": "d-013", "geom_surf_area": 2.1168, "pulse_amplitude": 200,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 593,  "temp_sensor_id": 2},
+        "PT08": {"intan_channel": "d-014", "geom_surf_area": 1.7199, "pulse_amplitude": 600,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 255,  "temp_sensor_id": 2},
+        "PT09": {"intan_channel": "d-015", "geom_surf_area": 1.6070, "pulse_amplitude": 600,  "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 245,  "temp_sensor_id": 2},
+        "PT10": {"intan_channel": "d-004", "geom_surf_area": 2.8304, "pulse_amplitude": 0,    "pulse_width": 0,   "pulse_interphase": 0,  "pulse_frequency": 0,  "initial_i_max": 245,  "temp_sensor_id": 2}
+        },
+    "broken_devices": ["PT01"],
+    "flags": {"Z": 10000, "CIC": 30}, 
+    "test_info": {
+        "tests": ["EIS-Intan-3", "VT-Intan"],
+        "temp_sensor_type": "phidget",
+        "thermocouple_type": "J",
+        "temp_offset": 5,
+        "cadence_hrs": 48,
+        "last_test": "2025-6-17 15:00"
+    },
+    "slack_updates": {
+        "cadence_months": 12,
+        "last_update_months": 48
+    }
+}

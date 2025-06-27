@@ -74,6 +74,13 @@ class IntanRHS:
             interphase (int): The interphase delay in microseconds.
             frequency (float): Frequency of stimulation pulse train in Hz. 0 for single pulse.
         """
+        # If amplitude, pulsewidth, or frequency are zero, the channel will be disabled
+        # Intan doesn't like zero pulse width or frequency, so set amplitude to zero and others to arbitrary values
+        if amplitude == 0 or pulsewidth == 0 or frequency == 0:
+            amplitude = 0
+            pulsewidth = 200
+            frequency = 50
+            
         # Enable stim on channel
         # self.scommand.sendall(b'set %s.stimenabled true' % channel)
         self.scommand.sendall(f'set {channel}.stimenabled true'.encode('utf-8'))
@@ -138,6 +145,11 @@ class IntanRHS:
         # Set custom name
         self.scommand.sendall(f'set {channel}.customchannelname {name}'.encode('utf-8'))
         time.sleep(0.12)
+
+        # If stim is zero, disable channel
+        if amplitude == 0 or pulsewidth == 0 or frequency == 0:
+            self.scommand.sendall(f'set {channel}.stimenabled false'.encode('utf-8'))
+            time.sleep(0.12)
 
     def disable_stim(self, channel):
         """
@@ -264,6 +276,14 @@ class IntanRHS:
         self.scommand.sendall(f'set desiredimpedancefreqhertz {frequency}'.encode('utf-8'))
         time.sleep(1)
 
+        # Get actual measurement frequency
+        self.scommand.sendall(b'get actualimpedancefreqhertz')
+        commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8")
+        expectedReturnString = "Return: ActualImpedanceFreqHertz "
+        freq_ind = commandReturn.find(expectedReturnString) + 33
+        # Look for "Return: ActualImpedanceFreqHertz N" where N is the measured frequency.
+        actual_frequency = float(commandReturn[freq_ind:])
+
         # Send TCP commands to measure impedance.
         self.scommand.sendall(b'execute measureimpedance')
         time.sleep((500/frequency) + 2)
@@ -272,7 +292,7 @@ class IntanRHS:
         self.scommand.sendall(b'execute saveimpedance')
         time.sleep(1)
 
-        return filename
+        return filename, actual_frequency
     
 
 def readUint32(array, arrayIndex):

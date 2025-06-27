@@ -1,4 +1,5 @@
 from Phidget22.Devices.TemperatureSensor import TemperatureSensor
+from Phidget22.Devices.TemperatureSensor import ThermocoupleType
 
 class Phidget22TemperatureSensor:
     def __init__(self, channel):
@@ -10,7 +11,14 @@ class Phidget22TemperatureSensor:
         self.ch.openWaitForAttachment(1000)
 
     def set_thermocouple_type(self, thermocouple_type):
-        self.ch.setThermocoupleType(thermocouple_type)
+        if thermocouple_type == "K":
+            self.ch.setThermocoupleType(ThermocoupleType.THERMOCOUPLE_TYPE_K)
+        elif thermocouple_type == "J":
+            self.ch.setThermocoupleType(ThermocoupleType.THERMOCOUPLE_TYPE_J)
+        elif thermocouple_type == "E":
+            self.ch.setThermocoupleType(ThermocoupleType.THERMOCOUPLE_TYPE_E)
+        elif thermocouple_type == "T":
+            self.ch.setThermocoupleType(ThermocoupleType.THERMOCOUPLE_TYPE_T)
         # print(f"Setting Thermocouple Type to {thermocouple_type}...")
 
     def get_thermocouple_type(self):

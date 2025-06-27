@@ -8,6 +8,7 @@ import statistics
 import numpy as np
 import requests
 import traceback
+import json
 
 from equipment.keithley_mux import KeithleyMUX as kmux
 from equipment.rs_lcx100 import LCX100 as lcx
@@ -22,6 +23,11 @@ from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_so
 SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 IMPEDANCE_TEST_TIME = (8, 20) #tests at 8am and 8pm every day
+
+SAMPLE_INFORMATION_PATH = './test_information/samples'
+EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
+TEST_INFORMATION_PATH = './test_information/tests.json'
+PLOT_INFORMATION_PATH = './test_information/special_plots.json'
 
 GROUPS = {
     "SIROF vs Pt": ["IR01", "IR02", "IR03", "IR04", "IR05", "IR06", "IR07", "IR08", "IR09", "IR10", "PT01", "PT02", "PT03", "PT04", "PT05", "PT06", "PT07", "PT08", "PT09", "PT10"],
@@ -81,7 +87,6 @@ GEOM_SURF_AREAS = [
     3.2472, 2.1784, 2.0868, 2.3458, 2.0832, 2.6302, 2.1168, 1.7199, 1.607, 2.8304,
     4, 4, 3.9204, 3.9204, 3.9601, 3.9601, 4, 4
 ] # mm^2
-SIROF_IMPEDANCE_THRESHOLD = 100000 # ohms
 
 # CONTINUOUS STIM CONSTANTS
 PULSE_WIDTH = 200 # us
@@ -157,12 +162,7 @@ def main():
     Sets up stimulation parameters on all channels listed above
     Measures impedance every interval defined by IMPEDANCE_TEST_INTERVAL
     Stimulates all other times
-
-    Intterupts with keypress "q"
     """
-
-    # Generate EIS frequencies
-    frequencies = generate_frequencies_to_test()
 
     # Connect to RHX software via TCP
     rhx = intan()
@@ -176,8 +176,32 @@ def main():
     # Connect to RHX software via TCP
     rhx.connect_to_waveform_server()
 
-    # Set up stimulation parameters for all channels
-    setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
+    # Set up stimulation for all samples controlled by Intan
+    # Loop through each group's info and set stim one sample at a time
+    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}", 'r') as f:
+            group_info = json.load(f)
+
+            # Check for any broken samples
+            broken_samples = group_info["broken_devices"]
+
+            # Loop through each sample in the group
+            for sample in group_info["samples"]:
+                sample_info = group_info["samples"][sample]
+
+                # If it's broken, set zero stim
+                if sample in broken_samples:
+                    setup_stim_channel(rhx, sample_info["intan_channel"], sample, 0, 0, 0, 0)
+
+                # Otherwise, set the defined stim
+                else:
+                    setup_stim_channel(
+                        rhx, sample_info["intan_channel"], sample, 
+                        sample_info["pulse_amplitude"], sample_info["pulse_width"], sample_info["pulse_interphase"], sample_info["pulse_freq"]
+                    )
+
+    # # Set up stimulation parameters for all channels
+    # setup_stim_channels(rhx, CHANNELS, SAMPLES, PULSE_AMPLITUDES, PULSE_WIDTH, INTERPHASE_DELAY, PULSE_FREQUENCY)
 
     # Start board running
     rhx.start_board()
@@ -188,41 +212,113 @@ def main():
     # Set the last check to the hour before the first test to trigger a test immediately if we're at test time
     last_check = min(IMPEDANCE_TEST_TIME) - 1
 
-    # Set the last update to year 0, will trigger slack update every year thereafter
-    last_update_encap = 0
-    last_update_ide = 0
-    last_update_sirof = 0
-    last_update_grids = 0
+    # # Set the last update to year 0, will trigger slack update every year thereafter
+    # last_update_encap = 0
+    # last_update_ide = 0
+    # last_update_sirof = 0
+    # last_update_grids = 0
 
+    # Loop through sample groups and pull the necessary information out of the json files for later testing
+    # In the testing section below, tests are not run by group because Intan measures impedance for all
+    # channels at the same time, so running through by equipment is faster
+    intan_info = pd.DataFrame({
+        "type": None, "intan_channel": None, "geom_surf_area": [], 
+        "pulse_amplitude": [], "pulse_width": [], "pulse_interphase": [], "pulse_frequency": [], 
+        "initial_i_max": []
+    })
+    intan_eis_frequencies = set()
+    lcr_info = pd.DataFrame({
+        "type": None, "mux_channels": None,
+        "eis_frequencies": None
+    })
+
+    # First, open test information, this will be needed later
+    with open(TEST_INFORMATION_PATH, 'r') as f:
+        test_info = json.load(f)
+
+    # Now, loop through groups
+    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}", 'r') as f:
+            group_info = json.load(f)
+        
+        # Pull broken samples
+        broken_samples = group_info["broken_devices"]
+
+        # Loop through each sample and add it to the relevant dataframe
+        for sample in group_info["samples"]:
+            sample_info = group_info[sample]
+            test_type = sample_info["type"]
+            tests = group_info[test_type]
+
+            if any("Intan" in test for test in tests):
+                intan_info.loc[sample] = sample_info
+
+            if any("LCR" in test for test in tests):
+                lcr_info.loc[sample] = sample_info
+            
+            # Loop through each test and add specific values
+            for test in tests:
+                # For EIS on the intan, all samples are running concurrently, so we build one big 
+                # list of EIS frequencies
+                if "Intan" in test and "EIS" in test:
+                    intan_eis_frequencies.update(test_info[test]["eis-frequencies"])
+                # For VT on the intan, skip any samples that don't call out the test or are listed
+                # as broken
+                if "VT" in test and "EIS" in test and sample not in broken_samples:
+                    intan_info.loc[sample, "vt_pulse_width"] = test_info[test]["vt_pulse_width"]
+                    intan_info.loc[sample, "vt_interphase"] = test_info[test]["vt_interphase"]
+                    intan_info.loc[sample, "vt_frequency"] = test_info[test]["vt_frequency"]
+                # For EIS on the LCR, samples are run in sequence, so we add the list of EIS 
+                # frequencies to the dataframe
+                if "LCR" in test and "EIS" in test:
+                    lcr_info.at[sample, "eis_frequencies"] = test_info[test]["eis_frequencies"]
+
+    # Fill any NaNs in intan_info with zero (catches devices with no VT testing)
+    intan_info.fillna(0, inplace=True)
+
+    # Update intan_eis_frequencies from set back to list
+    intan_eis_frequencies = list(intan_eis_frequencies)
+    
+    # Once information is saved, go to testing loop
     try:
         while run_test:
             current_hour = datetime.datetime.now().hour
 
+            # Check if it's time to run tests
             if current_hour in IMPEDANCE_TEST_TIME and current_hour != last_check:
-                rhx.stop_board()
+                # Start with all Intan tests
 
-                # Create a dataframe to store impedance, temperature, and CIC data
+                # Stop the Intan
+                rhx.stop_board()
+                intan_stop = datetime.datetime.now()
+                print("Stimulation off, starting tests.")
+
+                # Setup dataframe to save intan test data
                 ztc_dict = {
-                    'Channel Number': CHANNELS, 
-                    'Channel Name': SAMPLES, 
+                    'Channel Number': None, 
+                    'Channel Name': None, 
                     'Impedance Magnitude at 1000 Hz (ohms)': None,
                     'Impedance Phase at 1000 Hz (degrees)': None,
                     'Temperature (C)': None,
                     'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
-                    'Geometric Surface Area (mm^2)': GEOM_SURF_AREAS
+                    'Geometric Surface Area (mm^2)': None
                 }
                 impedance_temperature_cic = pd.DataFrame(ztc_dict)
 
                 # Measure impedance and temperature
                 print("Stimulation off. Running impedance check for SIROF parts.")
-                impedance_temperature_cic, filename = measure_intan_impedance(rhx, frequencies, impedance_temperature_cic)
+                impedance_temperature_cic, filename = measure_intan_impedance(rhx, intan_eis_frequencies, impedance_temperature_cic)
 
                 # Measure CIC and max currents
-                impedance_temperature_cic = measure_vt(rhx, CHANNELS, SAMPLES, sample_frequency, GEOM_SURF_AREAS, impedance_temperature_cic)
-
+                # impedance_temperature_cic = measure_vt(rhx, intan_vt_tests, intan_channels, intan_samples, intan_initial_i_maxes, sample_frequency, intan_geom_surf_areas, vt_pulse_width, vt_interphase, vt_pulse_frequency, impedance_temperature_cic)
+                impedance_temperature_cic = measure_vt(rhx, intan_info, sample_frequency, impedance_temperature_cic)
+resume here
                 # Save data, sorted to group
-                for group, devices in GROUPS.items():
-                    impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(devices)]
+                for group in os.listdir(SAMPLE_INFORMATION_PATH):
+                    with open(f"{SAMPLE_INFORMATION_PATH}/{group}", 'r') as f:
+                        group_info = json.load(f)
+                        samples = group_info["samples"]
+                    impedance_temperature_cic_group = impedance_temperature_cic[impedance_temperature_cic["Channel Name"].isin(samples)]
                     if not impedance_temperature_cic_group.empty:
                         impedance_temperature_cic_group.to_csv(f"./data/{group}/{filename}.csv")
 
@@ -277,7 +373,7 @@ def write_heartbeat():
     with open("heartbeat.txt", "w") as f:
         f.write(f"Last heartbeat: {now}\n")
 
-def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_width, interphase_delay, frequency):
+def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, width_list, interphase_list, freq_list):
     """
     Set up stimulation parameters for all channels
     """
@@ -293,6 +389,9 @@ def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_wi
         channel = channel_list[i]
         pulse_amplitude = amplitude_list[i]
         sample = sample_list[i]
+        pulse_width = width_list[i]
+        interphase_delay = interphase_list[i]
+        frequency = freq_list[i]
 
         if sample not in BROKEN_ELECTRODES:
             if print_updates:
@@ -310,6 +409,25 @@ def setup_stim_channels(rhx, channel_list, sample_list, amplitude_list, pulse_wi
         if pulse_amplitude == 0:
             rhx.disable_stim(channel)
 
+def setup_stim_channel(rhx, channel, sample, pulse_amplitude, pulse_width, pulse_interphase, pulse_freq):
+    """
+    Set up stimulation parameters for one channel
+    """
+
+    # Set up stimulation parameters
+    if sample not in BROKEN_ELECTRODES:
+        rhx.set_stim_parameters(channel, pulse_amplitude, pulse_width, pulse_interphase, pulse_freq, sample)
+    
+    # If the electrode is broken, set it to zero and disable
+    else:
+        rhx.set_stim_parameters(channel, 0, pulse_width, pulse_interphase, pulse_freq, sample)
+        rhx.disable_stim(channel)
+
+    # If any pulse parameters are set to zero, disable (except for interphase, which can be zero)
+    if pulse_amplitude == 0 or pulse_width == 0 or pulse_freq == 0:
+        rhx.disable_stim(channel)
+
+
 def measure_temperature():
     temp_sensor = phidget(TEMP_SENSOR_DRY_BATH_CHANNEL)
     temp_sensor.open_connection()
@@ -324,36 +442,35 @@ def measure_temperature():
 def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
     impedances = []
     phases = []
-    temperatures = []
     channels = []
     frequencies_updated = []
-
-    # Measure temperature
-    temperature = measure_temperature()
 
     # Loop through each frequency
     print('Measuring impedances...')
     for freq in frequencies:
-        if freq > 30 and freq < 5060: # Intan won't test outside this range
-            directory = os.getcwd()
-            filename = rhx.measure_impedance(f"{directory}/data/temp/", freq)
-            # Import saved impedance data
-            saved_impedances = pd.read_csv(f"{directory}/data/temp/{filename}.csv")
+        if freq < 30 or freq > 5060: # Intan won't test outside this range
+            continue
 
-            # Delete the file
-            os.remove(f"{directory}/data/temp/{filename}.csv")
+        # Measure impedance and store to temp folder
+        directory = os.getcwd()
+        filename = rhx.measure_impedance(f"{directory}/data/temp/", freq)
 
-            # Add tested channels to list
-            for channel_i in CHANNELS:
-                channel_i = channel_i.capitalize()
-                impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 4]
-                phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 5]
-            
-                impedances.append(impedance_i)
-                phases.append(phase_i)
-                temperatures.append(temperature)
-                channels.append(channel_i)
-                frequencies_updated.append(freq)
+        # Import saved impedance data
+        saved_impedances = pd.read_csv(f"{directory}/data/temp/{filename}.csv")
+
+        # Delete the temp file
+        os.remove(f"{directory}/data/temp/{filename}.csv")
+
+        # Add tested channels to list
+        for channel_i in CHANNELS:
+            channel_i = channel_i.capitalize()
+            impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 4]
+            phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 5]
+        
+            impedances.append(impedance_i)
+            phases.append(phase_i)
+            channels.append(channel_i)
+            frequencies_updated.append(freq)
 
     # Once through all frequencies, separate EIS data by channel
     for i, channel_i in enumerate(CHANNELS):
@@ -393,10 +510,20 @@ def measure_intan_impedance(rhx, frequencies, impedance_temperature_cic):
     
     return impedance_temperature_cic, filename
 
-def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance_temperature_cic):
+# def measure_vt(rhx, samples_to_test, channel_list, sample_list, vt_start, sample_frequency, gsas, vt_pulse_width, vt_interphase, vt_pulse_frequency, impedance_temperature_cic):
+def measure_vt(rhx, intan_info, sample_frequency, impedance_temperature_cic):
     """"
     Runs VT test
     """
+
+    # Pull info from df
+    sample_list = intan_info.index.to_list()
+    channel_list = intan_info["intan_channel"].to_list()
+    gsas = intan_info["geom_surf_area"].to_list()
+    vt_start = intan_info["initial_i_max"].to_list()
+    vt_pulse_widths = intan_info["vt_pulse_width"].to_list()
+    vt_interphases = intan_info["vt_interphase"].to_list()
+    vt_frequencies = intan_info["vt_frequency"].to_list()
 
     max_current_list = []
     cic_list = []
@@ -404,17 +531,19 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
     print("Running VT test for SIROF parts:")
     rhx.reset()
 
-    # Check for saved starting currents
-    if os.path.exists(VT_INITIAL_I_FILE):
-        vt_start = pd.read_csv(VT_INITIAL_I_FILE)
-        vt_start = vt_start['Starting Current for VT (uA)'].tolist()
-    else:
-        vt_start = INITIAL_I_MAX
+    # # Check for saved starting currents
+    # if os.path.exists(VT_INITIAL_I_FILE):
+    #     vt_start = pd.read_csv(VT_INITIAL_I_FILE)
+    #     vt_start = vt_start['Starting Current for VT (uA)'].tolist()
+    # else:
+    #     vt_start = INITIAL_I_MAX
 
     # Disable all channels
     # Disabling stim doesn't seem to work, so set all currents to zero
     print("Disabling all currents for test (this takes a few seconds)...")
-    setup_stim_channels(rhx, CHANNELS, SAMPLES, len(PULSE_AMPLITUDES) * [0], 0, 0, PULSE_FREQUENCY)
+    # amplitude, interphase, width, and frequency will be zero, so create a list of zeros first
+    zeros = len(intan_info) * [0]
+    setup_stim_channels(rhx, channel_list, sample_list, zeros, zeros, zeros, zeros)
 
     # Loop through each channel and run VT test
     for i in range(len(channel_list)):
@@ -422,68 +551,75 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
         sample = sample_list[i]
         gsa = gsas[i]
 
-        # Only measure parts which are still functional
-        if sample not in BROKEN_ELECTRODES:
-            # if vt_start is small, reset it to 100 uA
-            if vt_start[i] < 100:
-                vt_start[i] = 100
-
-            currents_tested = []
-            eps_calculated = []
-
-            # Intan cannot exceed 2500 uA - scale down if needed
-            if vt_start[i] > 2500:
-                start_current = 2500
-            else:
-                start_current = int(vt_start[i])
-
-            print(f"Testing sample {sample} (channel {channel}) with currents: {start_current}, {int(0.9*start_current)}, {int(0.8*start_current)}, {int(0.7*start_current)} uA")   
-
-            # Measure at 4 points, starting at vt_start[i] and scaling down
-            for current_i in [start_current, int(0.9*start_current), int(0.8*start_current), int(0.7*start_current)]:
-                # Enable current channel and set current
-                rhx.set_stim_parameters(channel, current_i, VT_PULSE_WIDTH, VT_INTERPHASE_DELAY, VT_PULSE_FREQUENCY, sample)
-                rhx.enable_data_output(channel)
-
-                # Stim for 1 second
-                rhx.start_board()
-                time.sleep(1)
-                rhx.stop_board()
-
-                # Read data from board
-                buffer_size = WAVEFORM_BUFFER_PER_SECOND_PER_CHANNEL
-                time_seconds, voltage_microvolts = rhx.read_data(buffer_size, sample_frequency)
-            
-                # Create dataframe
-                vt_data = {
-                    'Time (s)': time_seconds,
-                    'Voltage (uV)': voltage_microvolts
-                }
-                vt_data = pd.DataFrame(vt_data)
-
-                # Calculate and store ep
-                ep = calcluate_ep(vt_data)
-                currents_tested.append(current_i)
-                eps_calculated.append(ep)
-
-            # Disable current channel
-            rhx.set_stim_parameters(channel, 0, VT_PULSE_WIDTH, VT_INTERPHASE_DELAY, VT_PULSE_FREQUENCY, sample)
-            rhx.disable_stim(channel)
-            rhx.disable_data_output(channel)
-
-            # Calculate max current and CIC
-            coeff = np.polyfit(eps_calculated, currents_tested, 1)
-            bestfit = np.poly1d(coeff)
-            max_current = bestfit(0.6)
-
-            cic = max_current * (VT_PULSE_WIDTH / 1000000) / (gsa / 100) # uA * s / cm^2
-
-            print(f"CIC at 1000 us pulse width: {cic} uC/cm^2")
-
+        # # Only measure parts which are still functional
+        # if sample not in BROKEN_ELECTRODES:
+        # If vt_start is zero, the channel is broken or not listed for testing
+        if vt_start[i] == 0:
+            continue
+        # If vt_start is small, reset it to 100 uA
+        elif vt_start[i] < 100:
+            vt_start[i] = 100
+        # Intan cannot exceed 2500 uA - scale down if needed
+        elif vt_start[i] > 2500:
+            start_current = 2500
         else:
-            print(f"Sample {sample} listed as broken. No test performed.")
-            max_current = 0
-            cic = 0
+            start_current = int(vt_start[i])
+
+        currents_tested = []
+        eps_calculated = []
+
+        print(f"Testing sample {sample} (channel {channel}) with currents: {start_current}, {int(0.9*start_current)}, {int(0.8*start_current)}, {int(0.7*start_current)} uA")   
+
+        # Measure at 4 points, starting at vt_start[i] and scaling down
+        for current_i in [start_current, int(0.9*start_current), int(0.8*start_current), int(0.7*start_current)]:
+            # Enable current channel and set current
+            rhx.set_stim_parameters(channel, current_i, vt_pulse_widths[i], vt_interphases[i], vt_frequencies[i], sample)
+            rhx.enable_data_output(channel)
+
+            # Stim for 1 second
+            rhx.start_board()
+            time.sleep(1)
+            rhx.stop_board()
+
+            # Load equipment information
+            with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
+                equipment_info = json.load(f)
+            
+            # Read data from board
+            # buffer_size = WAVEFORM_BUFFER_PER_SECOND_PER_CHANNEL
+            buffer_size = equipment_info["Intan"]["waveform_buffer_per_second_per_channel"]
+            time_seconds, voltage_microvolts = rhx.read_data(buffer_size, sample_frequency)
+        
+            # Create dataframe
+            vt_data = {
+                'Time (s)': time_seconds,
+                'Voltage (uV)': voltage_microvolts
+            }
+            vt_data = pd.DataFrame(vt_data)
+
+            # Calculate and store ep
+            ep = calcluate_ep(vt_data)
+            currents_tested.append(current_i)
+            eps_calculated.append(ep)
+
+        # Disable current channel
+        rhx.set_stim_parameters(channel, 0, 0, 0, 0, sample)
+        rhx.disable_stim(channel)
+        rhx.disable_data_output(channel)
+
+        # Calculate max current and CIC
+        coeff = np.polyfit(eps_calculated, currents_tested, 1)
+        bestfit = np.poly1d(coeff)
+        max_current = bestfit(0.6)
+
+        cic = max_current * (vt_pulse_widths[i] / 1000000) / (gsa / 100) # uA * s / cm^2
+
+        print(f"CIC at 1000 us pulse width: {cic} uC/cm^2")
+
+        # else:
+        #     print(f"Sample {sample} listed as broken. No test performed.")
+        #     max_current = 0
+        #     cic = 0
 
         max_current_list.append(max_current*0.9)
         cic_list.append(cic)
@@ -491,16 +627,33 @@ def measure_vt(rhx, channel_list, sample_list, sample_frequency, gsas, impedance
     # Save CICs to dataframe
     impedance_temperature_cic['Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic_list
 
-    # Save new max current
-    vt_start = max_current_list
+    # Save new max current in each json
+    # Loop through each sample group
+    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        # Open the group info
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}", 'r') as f:
+            group_info = json.load(f)
 
-    i_dict = {
-        'Channel Number': CHANNELS, 
-        'Channel Name': SAMPLES, 
-        'Starting Current for VT (uA)': vt_start
-    }
-    vt_start = pd.DataFrame(i_dict)
-    vt_start.to_csv(VT_INITIAL_I_FILE, index=False)
+        group_samples = group_info["samples"]
+
+        # Loop through all samples tested
+        for i, sample in enumerate(sample_list):
+            # If the sample is in that group, overwrite "initial_i_max"
+            if sample in group_samples:
+                group_info["samples"][sample]["initial_i_max"] = max_current_list[i]
+    
+        # Rewrite the group info
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}", 'w') as f:
+            json.dump(group_info, f, indent=4)
+
+
+    # i_dict = {
+    #     'Channel Number': channel_list, 
+    #     'Channel Name': sample_list, 
+    #     'Starting Current for VT (uA)': vt_start
+    # }
+    # vt_start = pd.DataFrame(i_dict)
+    # vt_start.to_csv(VT_INITIAL_I_FILE, index=False)
 
     return impedance_temperature_cic
 

@@ -1,0 +1,23 @@
+{
+    "LCR": {
+        "measure_range": 1e2,
+        "delay_first": 5.0,
+        "delay": 1.0,
+        "measure_interval": "SHOR",
+        "resource_address": "USB0::0x0AAD::0x0197::3629.8856k02-102189::INSTR",
+        "visa_timeout": 3000,
+        "measure_type": "R"
+    },
+    "MUX": {
+        "resource_address": "GPIB0::15::INSTR"
+    },
+    "Intan": {
+        "waveform_buffer_per_second_per_channel": 200000
+    },
+    "phidget": {
+        "delay": 0.5
+    },
+    "Slack": {
+        "webhook": "https://hooks.slack.com/services/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"
+    }
+}

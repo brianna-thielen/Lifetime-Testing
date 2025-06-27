@@ -1,0 +1,23 @@
+{
+    "start_date": "2024-11-4 15:25",
+    "flagged_dates": {
+        "replaced PBS": "2025-3-27 17:50"
+    },
+    "samples": {
+        "ENCAP-R-100-1": {"mux_channels": [[1, 2], [1, 22]],  "temp_sensor_id": -1}, 
+        "ENCAP-R-100-2": {"mux_channels": [[1, 12], [1, 32]], "temp_sensor_id": -1}
+    },
+    "broken_devices": [],
+    "flags": {"RH": 40},
+    "test_info": {
+        "tests": ["RH-LCR"],
+        "temp_sensor_type": "rh",
+        "temp_offset": 0,
+        "cadence_hrs": 48,
+        "last_test": "2025-6-17 15:00"
+    },
+    "slack_updates": {
+        "cadence_months": 12,
+        "last_update_months": 36
+    }
+}

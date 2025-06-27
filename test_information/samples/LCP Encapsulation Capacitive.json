@@ -1,0 +1,26 @@
+{
+    "start_date": "2024-11-4 15:25",
+    "flagged_dates": {
+        "replaced PBS": "2025-3-27 17:50"
+    },
+    "samples": {
+        "ENCAP-C-25-2":  {"temp_sensor_id": -1}, 
+        "ENCAP-C-100-1": {"temp_sensor_id": -1},
+        "ENCAP-C-100-2": {"temp_sensor_id": -1}
+    },
+    "broken_devices": [],
+    "flags": {"RH": 20},
+    "test_info": {
+        "tests": ["RH-Arduino"],
+        "arduino_port": "COM4",
+        "arduino_baudrate": 9600,
+        "temp_sensor_type": "rh",
+        "temp_offset": 0,
+        "cadence_hrs": 12,
+        "last_test": "2025-6-17 15:00"
+    },
+    "slack_updates": {
+        "cadence_months": 12,
+        "last_update_months": 36
+    }
+}
