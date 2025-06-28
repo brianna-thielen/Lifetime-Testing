@@ -1,6 +1,8 @@
 {
     "start_date": "2024-11-4 15:25",
-    "flagged_dates": {},
+    "flagged_dates": {
+        "switched to automated testing": "2024-12-9 14:39"
+    },
     "samples": {
         "Ambient":  {"temp_sensor_id": -1}
     },

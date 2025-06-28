@@ -168,7 +168,14 @@ def main():
                     json.dump(group_info, f, indent=4)
 
             # Process data to generate plots and flag any issues
-            process_all_data()
+            if len(intan_groups + lcr_groups + arduino_groups) > 0:
+                process_all_data()
+
+            # Write a heartbeat
+            write_heartbeat()
+
+            # Wait a minute before the next loop iteration
+            time.sleep(60)
 
     except KeyboardInterrupt:
         print("Automated test stopped, stimulation remains on.")
@@ -257,7 +264,7 @@ def check_for_due_tests(current_datetime):
     # Loop through each group to see if testing is due
     for group in os.listdir(DATA_PATH):
         # Ignore temp and plot folders
-        if "Plots" in group or "temp" in group:
+        if "Plots" in group or "temp" in group or "Archive" in group:
             continue
 
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
@@ -477,8 +484,8 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
         print(f"Running VT test for group: {group}.")
         rhx.reset()
 
-        max_current_list = []
-        cic_list = []
+        # max_current_list = []
+        # cic_list = []
 
         # Disable all channels
         print("Disabling all currents for test (this takes a few seconds)...")
@@ -554,6 +561,11 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
             max_current = bestfit(0.6)
 
             cic = max_current * (vt_pulse_width / 1000000) / (gsa_i / 100) # uA * s / cm^2
+
+            # Force poorly performing devices to 1 so they continue being tested
+            if max_current <= 0:
+                max_current = 1
+                cic = 0
             
             # Save cic to sample_data_summary
             df.loc[len(df)-1, 'Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic
@@ -779,10 +791,10 @@ def perform_arduino_measurements(arduino_groups):
         try:
             print("Waiting for serial data...")
             line = ser.readline().decode('utf-8').strip()
-            if line:
-                print("Latest output:", line)
-            else:
-                print("No data received within timeout period.")
+            # if line:
+            #     print("Latest output:", line)
+            # else:
+            #     print("No data received within timeout period.")
         finally:
             ser.close()
 
@@ -806,7 +818,7 @@ def process_all_data():
         flagged_samples_group = ""
 
         # Skip Plots and temp folders
-        if "Plots" in group or "temp" in group:
+        if "Plots" in group or "temp" in group or "Archive" in group:
             continue
 
         # Load group info
@@ -877,6 +889,11 @@ def process_all_data():
 def notify_slack(webhook, message):
     payload = {'text': message}
     requests.post(webhook, json=payload)
+
+def write_heartbeat():
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("heartbeat.txt", "w") as f:
+        f.write(f"Last heartbeat: {now}\n")
 
 if __name__ == '__main__':
     # Declare buffer size for reading from TCP command socket
