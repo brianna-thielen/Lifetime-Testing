@@ -6,7 +6,7 @@ import plotly.colors as pc
 import numpy as np
 import datetime
 
-from support_functions import calculate_accel_days
+from support_functions.support_functions import calculate_accel_days
 
 # Base color options - add more if you ever want to plot more than 5 groups in one plot
 BASE_COLORS = [

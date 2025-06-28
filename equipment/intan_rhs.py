@@ -184,7 +184,7 @@ class IntanRHS:
         expectedReturnString = "Return: SampleRateHertz "
         # Look for "Return: SampleRateHertz N" where N is the sample rate.
         sample_frequency = float(commandReturn[len(expectedReturnString):])
-        print(f"Sample frequency: {int(sample_frequency / 1000)} kHz")
+        # print(f"Sample frequency: {int(sample_frequency / 1000)} kHz")
         return sample_frequency
     
     def enable_data_output(self, channel):
@@ -232,6 +232,8 @@ class IntanRHS:
             # Expect 4 bytes to be TCP Magic Number as uint32.
             # If not what's expected, raise an exception.
             magicNumber, rawIndex = readUint32(rawData, rawIndex)
+            print(magicNumber)
+            print(rawIndex)
             if magicNumber != 0x2ef07a08:
                 raise InvalidMagicNumber('Error... magic number incorrect')
 
@@ -276,14 +278,6 @@ class IntanRHS:
         self.scommand.sendall(f'set desiredimpedancefreqhertz {frequency}'.encode('utf-8'))
         time.sleep(1)
 
-        # Get actual measurement frequency
-        self.scommand.sendall(b'get actualimpedancefreqhertz')
-        commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8")
-        expectedReturnString = "Return: ActualImpedanceFreqHertz "
-        freq_ind = commandReturn.find(expectedReturnString) + 33
-        # Look for "Return: ActualImpedanceFreqHertz N" where N is the measured frequency.
-        actual_frequency = float(commandReturn[freq_ind:])
-
         # Send TCP commands to measure impedance.
         self.scommand.sendall(b'execute measureimpedance')
         time.sleep((500/frequency) + 2)
@@ -291,6 +285,19 @@ class IntanRHS:
         # Save impedance data        
         self.scommand.sendall(b'execute saveimpedance')
         time.sleep(1)
+
+        # Get actual measurement frequency
+        self.scommand.sendall(b'get actualimpedancefreqhertz')
+        commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8") #first one throws an error
+        if "ActualImpedanceFreqHertz" not in commandReturn: #this sometimes throws an error, so you have to command again
+            commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8")
+        if "ActualImpedanceFreqHertz" not in commandReturn: #if the second time doesn't work, give up
+            actual_frequency = float('NaN')
+        else:
+            expectedReturnString = "Return: ActualImpedanceFreqHertz "
+            freq_ind = commandReturn.find(expectedReturnString) + 33
+            # Look for "Return: ActualImpedanceFreqHertz N" where N is the measured frequency.
+            actual_frequency = float(commandReturn[freq_ind:])
 
         return filename, actual_frequency
     

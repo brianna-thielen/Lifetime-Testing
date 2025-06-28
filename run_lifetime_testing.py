@@ -99,12 +99,12 @@ def main():
 
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
-    setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
+    # setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
 
     # Initialize the LCR and mux
-    lcx100, mux = initialize_lcr_mux(EQUIPMENT_INFO)
+    lcx100, mux = initialize_lcr_mux()
 
     # Start testing loop
     run_test = True
@@ -224,34 +224,48 @@ def initialize_lcr_mux():
 def setup_all_stim_intan(rhx, stim_on):
     # When stim_on is True, all channels are set to values under test_information/samples
     # When stim_on is False, all channels are set to zero and disabled
+    if stim_on:
+        print("Setting up stim (this takes a few minutes).")
+    else:
+        print("Disabling stim (this takes a few minutes).")
 
-    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+
+    for group in os.listdir(DATA_PATH):
+        if "Plots" in group or "temp" in group or "Archive" in group:
+            continue
+
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
-            # Check for any broken samples
-            broken_samples = group_info["broken_devices"]
+        # Check if the group uses intan
+        first_sample, first_params = next(iter(group_info["samples"].items()))
+        if "pulse_amplitude" not in first_params:
+            continue
 
-            # Loop through each sample in the group
-            for sample in group_info["samples"]:
-                sample_info = group_info["samples"][sample]
+        # Check for any broken samples
+        broken_samples = group_info["broken_devices"]
 
-                # If stim_on is False, set zero stim
-                if not stim_on:
-                    rhx.set_stim_parameters(sample_info["intan_channel"], 0, 0, 0, 0, sample)
-                # If it's broken, set zero stim
-                elif sample in broken_samples:
-                    rhx.set_stim_parameters(sample_info["intan_channel"], 0, 0, 0, 0, sample)
+        # Loop through each sample in the group
+        for sample in group_info["samples"]:
+            sample_info = group_info["samples"][sample]
 
-                # Otherwise, set the defined stim
-                else:
-                    rhx.set_stim_parameters(
-                        sample_info["intan_channel"], 
-                        sample_info["pulse_width"], 
-                        sample_info["pulse_interphase"], 
-                        sample_info["pulse_freq"], 
-                        sample
-                    )
+            # If stim_on is False, set zero stim
+            if not stim_on:
+                rhx.set_stim_parameters(sample_info["intan_channel"], 0, 0, 0, 0, sample)
+            # If it's broken, set zero stim
+            elif sample in broken_samples:
+                rhx.set_stim_parameters(sample_info["intan_channel"], 0, 0, 0, 0, sample)
+
+            # Otherwise, set the defined stim
+            else:
+                rhx.set_stim_parameters(
+                    sample_info["intan_channel"],
+                    sample_info["pulse_amplitude"],
+                    sample_info["pulse_width"], 
+                    sample_info["pulse_interphase"], 
+                    sample_info["pulse_frequency"], 
+                    sample
+                )
 
 def check_for_due_tests(current_datetime):
     intan_groups = []
@@ -289,23 +303,29 @@ def check_for_due_tests(current_datetime):
 
                 # If the group includes an Intan EIS test, add frequencies to the list
                 if "EIS-Intan" in test:
-                    intan_eis_frequencies.update(TEST_INFO[test]["eis-frequencies"])
+                    intan_eis_frequencies.update(TEST_INFO[test]["eis_frequencies"])
 
     # Convert intan_eis_frequencies from set to list
     intan_eis_frequencies = list(intan_eis_frequencies)
+    intan_eis_frequencies.sort()
+
+    # Remove duplicates from group lists
+    intan_groups = list(set(intan_groups))
+    lcr_groups = list(set(lcr_groups))
+    arduino_groups = list(set(arduino_groups))
 
     return intan_groups, lcr_groups, arduino_groups, intan_eis_frequencies
 
 def perform_intan_measurements(rhx, intan_eis_frequencies, intan_groups, sample_frequency):
     # Setup dataframe to save intan test data
     ztc_dict = {
-        'Channel Number': None, 
-        'Channel Name': None, 
-        'Impedance Magnitude at 1000 Hz (ohms)': None,
-        'Impedance Phase at 1000 Hz (degrees)': None,
-        'Temperature (C)': None,
-        'Charge Injection Capacity @ 1000 us (uC/cm^2)': None,
-        'Geometric Surface Area (mm^2)': None
+        'Channel Number': [None], 
+        'Channel Name': [None], 
+        'Impedance Magnitude at 1000 Hz (ohms)': [None],
+        'Impedance Phase at 1000 Hz (degrees)': [None],
+        'Temperature (C)': [None],
+        'Charge Injection Capacity @ 1000 us (uC/cm^2)': [None],
+        'Geometric Surface Area (mm^2)': [None]
     }
     impedance_temperature_cic = pd.DataFrame(ztc_dict)
 
@@ -328,14 +348,14 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
             group_info = json.load(f)
 
         # If EIS testing is not included, skip the group
-        if "EIS-Intan" not in group_info["test_info"]["tests"]:
+        if not any("EIS-Intan" in test for test in group_info["test_info"]["tests"]):
             continue
 
         channels_g = [sample["intan_channel"] for sample in group_info["samples"].values()]
-        channels.append(channels_g)
+        channels = channels + channels_g
 
-        samples_g = group["samples"].values()
-        samples.append(samples_g)
+        samples_g = list(group_info["samples"].keys())
+        samples = samples + samples_g
 
         # # also measure temperature for each group and save it
         # temperature = measure_temperature(sample, group_info, EQUIPMENT_INFO)
@@ -374,7 +394,9 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
             frequencies_updated.append(freq)
 
     # Once through all frequencies, separate EIS data by group and channel
+    print(channels)
     for g, group in enumerate(groups):
+        print(group)
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
@@ -384,10 +406,12 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
 
         # real_days = measurement_time - first_day
         # real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
+        
         for i, channel_i in enumerate(channels):
+            print(channel_i, group_info["samples"])
             # If the channel is not in the group, skip it
             if channel_i not in [sample["intan_channel"] for sample in group_info["samples"].values()]:
+                print('continuing')
                 continue
 
             channel_i_cap = channel_i.capitalize()
@@ -509,9 +533,9 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
                 vt_start[i] = 100
             # Intan cannot exceed 2500 uA - scale down if needed
             elif vt_start[i] > 2500:
-                start_current = 2500
+                vt_start[i] = 2500
             else:
-                start_current = int(vt_start[i])
+                vt_start[i] = int(vt_start[i])
 
             currents_tested = []
             eps_calculated = []
@@ -521,10 +545,10 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
             # Start testing
-            print(f"Testing sample {sample_i} (channel {channel_i}) with currents: {start_current}, {int(0.9*start_current)}, {int(0.8*start_current)}, {int(0.7*start_current)} uA")   
+            print(f"Testing sample {sample_i} (channel {channel_i})")   
 
             # Measure at 4 points, starting at vt_start[i] and scaling down
-            for current_i in [start_current, int(0.9*start_current), int(0.8*start_current), int(0.7*start_current)]:
+            for current_i in [vt_start[i], int(0.9*vt_start[i]), int(0.8*vt_start[i]), int(0.7*vt_start[i])]:
                 # Enable current channel and set current
                 rhx.set_stim_parameters(channel_i, current_i, vt_pulse_width, vt_interphase, vt_frequency, sample_i)
                 rhx.enable_data_output(channel_i)
@@ -570,6 +594,7 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
             # Save cic to sample_data_summary
             df.loc[len(df)-1, 'Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic
             df.to_csv(f"{DATA_PATH}/{group}/{sample_i}_data_summary.csv")
+            print(f"saved vt to: {DATA_PATH}/{group}/{sample_i}_data_summary.csv")
 
             # # Save CIC to impedance_temperature_cic
             # impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic

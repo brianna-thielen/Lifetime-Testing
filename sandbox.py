@@ -6,30 +6,31 @@ import math
 import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-# from support_functions import measure_temperature
+import pprint
+from equipment.intan_rhs import IntanRHS as intan
+import time
 
 SAMPLE_INFORMATION_PATH = './test_information/samples'
 DATA_PATH = './data'
 EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
 PLOT_INFORMATION_PATH = './test_information/special_plots.json'
+TEST_INFORMATION_PATH = './test_information/tests.json'
 
-TEMP_GROUP = "Pt Foil"
-TEMP_FILES = ["intanimpedance_1k_20250425151936.csv", "intanimpedance_1k_20250426033747.csv"]
-flagged_dates_all = {'replaced PBS': '3-28-25 17:50'}
+# # Connect to RHX software via TCP
+# rhx = intan()
 
-flagged_dates_group = {
-    "replaced PBS": ["3-27-25 17:50", '12'],
-    "test": "4-24-34 17:50"
-}
+# # Query sample rate from RHX software.
+# sample_frequency = rhx.find_sample_frequency()
 
-flagged_samples = {}
-flagged_samples_f = {}
+# # Clear data output and disable all TCP channels
+# rhx.reset()
 
-flag = "a"
-flagged_samples_g = ['n', 'm']
-group = 'b'
-flagged_samples_f[flag] = flagged_samples_g
-flagged_samples[group] = flagged_samples_f
+# # Connect to RHX software via TCP
+# rhx.connect_to_waveform_server()
 
-payload = {'text': 'test'}
-requests.post("https://hooks.slack.com/services/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", json=payload)
+# directory = os.getcwd()
+# filename, freq = rhx.measure_impedance(f"{directory}/data/temp/", 46.4)
+
+g = ['EIS-Intan-3', 'VT-Intan', 'VT-Intan']
+g = list(set(g))
+print(g)

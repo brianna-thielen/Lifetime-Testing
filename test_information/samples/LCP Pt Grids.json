@@ -2,19 +2,97 @@
     "start_date": "2025-4-24 16:00",
     "flagged_dates": {},
     "samples": {
-        "G1X1-1":  {"intan_channel": "d-023", "geom_surf_area": 4,      "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 58,  "temp_sensor_id": 2}, 
-        "G1X1-2":  {"intan_channel": "d-022", "geom_surf_area": 4,      "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 60,  "temp_sensor_id": 2}, 
-        "G3X3S-1": {"intan_channel": "d-021", "geom_surf_area": 3.9204, "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 41,  "temp_sensor_id": 2}, 
-        "G3X3S-2": {"intan_channel": "d-020", "geom_surf_area": 3.9204, "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 44,  "temp_sensor_id": 2}, 
-        "G2X2S-1": {"intan_channel": "d-019", "geom_surf_area": 3.9601, "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 31,  "temp_sensor_id": 2}, 
-        "G2X2S-2": {"intan_channel": "d-018", "geom_surf_area": 3.9601, "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 71,  "temp_sensor_id": 2}, 
-        "G2X2L-1": {"intan_channel": "d-017", "geom_surf_area": 4,      "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 27,  "temp_sensor_id": 2}, 
-        "G2X2L-2": {"intan_channel": "d-016", "geom_surf_area": 4,      "pulse_amplitude": 400, "pulse_width": 200, "pulse_interphase": 50, "pulse_frequency": 50, "initial_i_max": 55,  "temp_sensor_id": 2}
+        "G1X1-1": {
+            "intan_channel": "d-023",
+            "geom_surf_area": 4,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 76.22333747722281,
+            "temp_sensor_id": 2
         },
+        "G1X1-2": {
+            "intan_channel": "d-022",
+            "geom_surf_area": 4,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 61.087044534421715,
+            "temp_sensor_id": 2
+        },
+        "G3X3S-1": {
+            "intan_channel": "d-021",
+            "geom_surf_area": 3.9204,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 210.1153846153788,
+            "temp_sensor_id": 2
+        },
+        "G3X3S-2": {
+            "intan_channel": "d-020",
+            "geom_surf_area": 3.9204,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 57.44451450189248,
+            "temp_sensor_id": 2
+        },
+        "G2X2S-1": {
+            "intan_channel": "d-019",
+            "geom_surf_area": 3.9601,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 33.52965096576948,
+            "temp_sensor_id": 2
+        },
+        "G2X2S-2": {
+            "intan_channel": "d-018",
+            "geom_surf_area": 3.9601,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 61.96153846153688,
+            "temp_sensor_id": 2
+        },
+        "G2X2L-1": {
+            "intan_channel": "d-017",
+            "geom_surf_area": 4,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 10.246153846147287,
+            "temp_sensor_id": 2
+        },
+        "G2X2L-2": {
+            "intan_channel": "d-016",
+            "geom_surf_area": 4,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 55.94911242603308,
+            "temp_sensor_id": 2
+        }
+    },
     "broken_devices": [],
-    "flags": {"Z": 10000, "CIC": 5}, 
+    "flags": {
+        "Z": 10000,
+        "CIC": 5
+    },
     "test_info": {
-        "tests": ["EIS-Intan-3", "VT-Intan"],
+        "tests": [
+            "EIS-Intan-3",
+            "VT-Intan"
+        ],
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 5,

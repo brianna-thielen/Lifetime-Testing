@@ -134,6 +134,7 @@ def record_impedance_data_to_summary(group, sample, measurement_time, impedance,
         new_df = df.copy()
     else:
         new_df = pd.concat([df, new_row], ignore_index=True)
+    print(f"saving: {data_path}/{group}/{sample}_data_summary.csv")
 
     new_df.to_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
 
