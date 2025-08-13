@@ -10,27 +10,27 @@ import pprint
 from equipment.intan_rhs import IntanRHS as intan
 import time
 
-SAMPLE_INFORMATION_PATH = './test_information/samples'
-DATA_PATH = './data'
-EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
-PLOT_INFORMATION_PATH = './test_information/special_plots.json'
-TEST_INFORMATION_PATH = './test_information/tests.json'
 
-# # Connect to RHX software via TCP
-# rhx = intan()
+folder_new = 'C:/Users/3DPrint-Integral/Desktop/temp lifetime/data/LCP Encapsulation Capacitive Ambient'
+folder_old = 'C:/Users/3DPrint-Integral/src/Lifetime-Testing/Lifetime-Testing/data/LCP Encapsulation Capacitive Ambient'
 
-# # Query sample rate from RHX software.
-# sample_frequency = rhx.find_sample_frequency()
+files = os.listdir(folder_new)
 
-# # Clear data output and disable all TCP channels
-# rhx.reset()
+for file in files:
+    if file == 'new' or file == 'raw-data':
+        continue
+    new = pd.read_csv(f'{folder_new}/{file}')
+    old = pd.read_csv(f'{folder_old}/{file}')
 
-# # Connect to RHX software via TCP
-# rhx.connect_to_waveform_server()
+    new = new.drop(columns=['Unnamed: 0'])
+    old = old.drop(columns=['Unnamed: 0'])
 
-# directory = os.getcwd()
-# filename, freq = rhx.measure_impedance(f"{directory}/data/temp/", 46.4)
+    combined = pd.concat([old, new], ignore_index=True)
+    combined = combined.drop_duplicates()
+    combined = combined.sort_values(by='Real Days').reset_index(drop=True)
+    
+    # print(new)
+    # print(old)
+    # print(combined)
 
-g = ['EIS-Intan-3', 'VT-Intan', 'VT-Intan']
-g = list(set(g))
-print(g)
+    combined.to_csv(f'{folder_new}/new/{file}')

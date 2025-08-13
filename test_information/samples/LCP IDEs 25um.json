@@ -5,24 +5,125 @@
         "replaced PBS": "2025-3-27 17:50"
     },
     "samples": {
-        "IDE-25-1":  {"mux_channels": [[1, 10], [1, 30]], "temp_sensor_id": 2}, 
-        "IDE-25-2":  {"mux_channels": [[1, 20], [1, 40]], "temp_sensor_id": 2}, 
-        "IDE-25-3":  {"mux_channels": [[1, 9], [1, 29]],  "temp_sensor_id": 2}, 
-        "IDE-25-4":  {"mux_channels": [[1, 19], [1, 39]], "temp_sensor_id": 2}, 
-        "IDE-25-5":  {"mux_channels": [[1, 8], [1, 28]],  "temp_sensor_id": 2}, 
-        "IDE-25-6":  {"mux_channels": [[1, 18], [1, 38]], "temp_sensor_id": 2}, 
-        "IDE-25-7":  {"mux_channels": [[1, 7], [1, 27]],  "temp_sensor_id": 2}, 
-        "IDE-25-8":  {"mux_channels": [[1, 17], [1, 37]], "temp_sensor_id": 2}
+        "IDE-25-1": {
+            "mux_channels": [
+                [
+                    1,
+                    10
+                ],
+                [
+                    1,
+                    30
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-2": {
+            "mux_channels": [
+                [
+                    1,
+                    20
+                ],
+                [
+                    1,
+                    40
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-3": {
+            "mux_channels": [
+                [
+                    1,
+                    9
+                ],
+                [
+                    1,
+                    29
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-4": {
+            "mux_channels": [
+                [
+                    1,
+                    19
+                ],
+                [
+                    1,
+                    39
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-5": {
+            "mux_channels": [
+                [
+                    1,
+                    8
+                ],
+                [
+                    1,
+                    28
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-6": {
+            "mux_channels": [
+                [
+                    1,
+                    18
+                ],
+                [
+                    1,
+                    38
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-7": {
+            "mux_channels": [
+                [
+                    1,
+                    7
+                ],
+                [
+                    1,
+                    27
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-8": {
+            "mux_channels": [
+                [
+                    1,
+                    17
+                ],
+                [
+                    1,
+                    37
+                ]
+            ],
+            "temp_sensor_id": 2
+        }
     },
     "broken_devices": [],
-    "flags": {"Z": 10000, "Z change": 0.8},
+    "flags": {
+        "Z": 10000,
+        "Z change": 0.8
+    },
     "test_info": {
-        "tests": ["EIS-LCR-3"],
+        "tests": [
+            "EIS-LCR-3"
+        ],
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 3.5,
-        "cadence_hrs": 48,
-        "last_test": "2025-6-17 15:00"
+        "cadence_hrs": 24,
+        "last_test": "2025-8-12 09:37"
     },
     "slack_updates": {
         "cadence_months": 12,

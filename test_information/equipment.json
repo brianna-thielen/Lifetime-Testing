@@ -17,6 +17,9 @@
     "phidget": {
         "delay": 0.5
     },
+    "rh-temp": {
+        "delay": 0.5
+    },
     "Slack": {
         "webhook": "https://hooks.slack.com/services/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"
     }

@@ -6,7 +6,7 @@ import plotly.colors as pc
 import numpy as np
 import datetime
 
-from support_functions.support_functions import calculate_accel_days
+from support_functions.support_functions import calculate_accel_days, calculate_accel_days_single
 
 # Base color options - add more if you ever want to plot more than 5 groups in one plot
 BASE_COLORS = [
@@ -81,7 +81,9 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             # Plot z and save to z_average, z_last
             z = df["Impedance Magnitude at 1000 Hz (ohms)"]
             z_last[s] = z[-1]
-            accel_days = df["Accelerated Days"]
+            temperature = df["Temperature (C)"]
+            real_days = df["Real Days"]
+            accel_days = calculate_accel_days(real_days, temperature)
 
             if len(groups) == 1:
                 z_last[s] = z[-1]
@@ -175,21 +177,13 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             first_day = group_info["start_date"]
             first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-            real_days = date_g - first_day
-            real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-            # Open data summary
-            df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
-
-            # Find closest measurement to flagged date
-            offset = abs(df["Real Days"] - real_days)
-            ind_closest = offset.idxmin()
-            temperature = float(df.loc[ind_closest, "Temperature (C)"])
+            days = date_g - first_day
+            days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
             # Calculate accelerated days
-            accel_days = calculate_accel_days(real_days, temperature, df)
+            accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-            add_vert_line(fig_z, 2, 1, accel_days, f"{flag_g} ({sample} @ {accel_days} days)")
+            add_vert_line(fig_z, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)")
 
 
     fig_z.write_html(f"{plot_path}/{title}.html")
@@ -256,7 +250,9 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
             # Plot cic and save to cic_average, cic_last
             cic = df["Charge Injection Capacity @ 1000 us (uC/cm^2)"]
             cic_last[s] = cic[-1]
-            accel_days = df["Accelerated Days"]
+            temperature = df["Temperature (C)"]
+            real_days = df["Real Days"]
+            accel_days = calculate_accel_days(real_days, temperature)
 
             if len(groups) == 1:
                 cic_last[s] = cic[-1]
@@ -348,21 +344,13 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
             first_day = group_info["start_date"]
             first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-            real_days = date_g - first_day
-            real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-            # Open data summary
-            df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
-
-            # Find closest measurement to flagged date
-            offset = abs(df["Real Days"] - real_days)
-            ind_closest = offset.idxmin()
-            temperature = float(df.loc[ind_closest, "Temperature (C)"])
+            days = date_g - first_day
+            days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
             # Calculate accelerated days
-            accel_days = calculate_accel_days(real_days, temperature, df)
+            accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-            add_vert_line(fig_cic, 1, 1, accel_days, f"{flag_g} ({sample} @ {accel_days} days)")
+            add_vert_line(fig_cic, 1, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)")
 
     fig_cic.write_html(f"{plot_path}/{title}.html")
 
@@ -405,13 +393,17 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
             # Plot
             rh = df["Relative Humidity (%)"]
             temperature = df["Temperature (C)"]
-            accel_days = df["Accelerated Days"]
+            real_days = df["Real Days"]
+            accel_days = calculate_accel_days(real_days, temperature)
 
-            if len(groups) == 1:
-                rh_last[s] = rh[-1]
-                if min_accel_days > max(accel_days): # want to save the smallest of last accel days so we don't oversell progress
-                    min_accel_days = max(accel_days)
+            # Save the smallest of the last accel days so we don't oversell progress
+            if min_accel_days > max(accel_days):
+                min_accel_days = max(accel_days)
 
+            # Save the last rh value
+            rh_last.append(list(rh)[-1])
+
+            # Plot
             fig_rh.add_trace(
                 go.Scatter(
                     x=accel_days,
@@ -448,21 +440,13 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
             first_day = group_info["start_date"]
             first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-            real_days = date_g - first_day
-            real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-            # Open data summary
-            df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
-
-            # Find closest measurement to flagged date
-            offset = abs(df["Real Days"] - real_days)
-            ind_closest = offset.idxmin()
-            temperature = float(df.loc[ind_closest, "Temperature (C)"])
+            days = date_g - first_day
+            days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
             # Calculate accelerated days
-            accel_days = calculate_accel_days(real_days, temperature, df)
+            accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-            add_vert_line(fig_rh, 2, 1, accel_days, f"{flag_g} ({sample} @ {accel_days} days)")
+            add_vert_line(fig_rh, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)")
 
 
     fig_rh.write_html(f"{plot_path}/{title}.html")

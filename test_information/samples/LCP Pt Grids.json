@@ -9,7 +9,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 76.22333747722281,
+            "initial_i_max": 56.29209979209492,
             "temp_sensor_id": 2
         },
         "G1X1-2": {
@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 61.087044534421715,
+            "initial_i_max": 51.23076923077181,
             "temp_sensor_id": 2
         },
         "G3X3S-1": {
@@ -29,7 +29,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 210.1153846153788,
+            "initial_i_max": 98.12079788927878,
             "temp_sensor_id": 2
         },
         "G3X3S-2": {
@@ -39,7 +39,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 57.44451450189248,
+            "initial_i_max": 267.68181818181245,
             "temp_sensor_id": 2
         },
         "G2X2S-1": {
@@ -49,7 +49,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 33.52965096576948,
+            "initial_i_max": 62.45062034740414,
             "temp_sensor_id": 2
         },
         "G2X2S-2": {
@@ -59,7 +59,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 61.96153846153688,
+            "initial_i_max": 48.23218499291895,
             "temp_sensor_id": 2
         },
         "G2X2L-1": {
@@ -69,7 +69,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 10.246153846147287,
+            "initial_i_max": 55.94911242603854,
             "temp_sensor_id": 2
         },
         "G2X2L-2": {
@@ -79,7 +79,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 55.94911242603308,
+            "initial_i_max": 49.66885553471194,
             "temp_sensor_id": 2
         }
     },
@@ -96,8 +96,8 @@
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 5,
-        "cadence_hrs": 48,
-        "last_test": "2025-6-17 15:00"
+        "cadence_hrs": 24,
+        "last_test": "2025-8-12 09:37"
     },
     "slack_updates": {
         "cadence_months": 6,

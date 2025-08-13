@@ -99,12 +99,9 @@ def main():
 
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
-    # setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
+    setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
-
-    # Initialize the LCR and mux
-    lcx100, mux = initialize_lcr_mux()
 
     # Start testing loop
     run_test = True
@@ -115,14 +112,17 @@ def main():
             # Check if it's time to run tests for any group, and save intan frequencies for those groups
             intan_groups, lcr_groups, arduino_groups, intan_eis_frequencies = check_for_due_tests(current_datetime)
 
+            # If tests are due, print timestamp
+            if len(intan_groups + lcr_groups + arduino_groups) > 0:
+                now = datetime.datetime.now()
+                now = now.strftime("%m/%d %H:%M:%S")
+                print(f'Starting testing at {now}')
+
             # Run Intan tests
             if len(intan_groups) > 0:
                 # Stop the intan
                 rhx.stop_board()
                 print('Stopping stim for Intan measurements.')
-
-                # # Record stop time in data summary
-                # record_timestamp(intan_stop, False, intan_groups)
 
                 # Perform measurements and save data
                 perform_intan_measurements(rhx, intan_eis_frequencies, intan_groups, sample_frequency)
@@ -134,28 +134,25 @@ def main():
                 time.sleep(0.12)
 
                 # Record restart time in data summaries
-                record_timestamp(True, intan_groups, group_info, EQUIPMENT_INFO, DATA_PATH)
-
-                # # Sort data and save
-                # sort_intan_data(impedance_temperature_cic, intan_groups, filename)
+                record_timestamp(True, intan_groups, SAMPLE_INFORMATION_PATH, EQUIPMENT_INFO, DATA_PATH)
 
             # Then, run LCR tests
             if len(lcr_groups) > 0:
-                print('Staring LCR measurements.')
+                now = datetime.datetime.now()
+                now = now.strftime("%m/%d %H:%M:%S")
+                print(f'Starting LCR measurements at {now}.')
 
                 # Perform measurements
-                perform_lcr_measurements(lcx100, mux, lcr_groups)
-
-                # # Record timestamp
-                # record_timestamp(measurement_time, False, lcr_groups)
+                perform_lcr_measurements(lcr_groups)
 
             # Then, arduino measurements
             if len(arduino_groups) > 0:
-                print('Starting Arduino measurements.')
-                measurement_time = datetime.datetime.now()
+                now = datetime.datetime.now()
+                now = now.strftime("%m/%d %H:%M:%S")
+                print(f'Starting Arduino measurements at {now}.')
 
                 # Read Arduino
-                perform_arduino_measurements()
+                perform_arduino_measurements(arduino_groups)
 
             # Update last measurement in tested groups
             for group in intan_groups + lcr_groups + arduino_groups:
@@ -167,9 +164,19 @@ def main():
                 with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'w') as f:
                     json.dump(group_info, f, indent=4)
 
-            # Process data to generate plots and flag any issues
+            # Print that testing is done
+            # If any tests were done, print timestamp
             if len(intan_groups + lcr_groups + arduino_groups) > 0:
-                process_all_data()
+                now = datetime.datetime.now()
+                now = now.strftime("%m/%d %H:%M:%S")
+                print(f'Finished testing at {now}')
+
+            # # Process data to generate plots and flag any issues
+            # a = 1
+            # # if len(intan_groups + lcr_groups + arduino_groups) > 0:
+            # if a:
+            #     process_all_data()
+            #     a = 0
 
             # Write a heartbeat
             write_heartbeat()
@@ -182,6 +189,7 @@ def main():
         notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
 
 def initialize_intan():
+    print('Connecting to Intan.')
     # Connect to RHX software via TCP
     rhx = intan()
 
@@ -197,6 +205,7 @@ def initialize_intan():
     return rhx, sample_frequency
 
 def initialize_lcr_mux():
+    print('Connecting to LCR and mux.')
     # Connect equipment
     lcx100 = lcx(EQUIPMENT_INFO["LCR"]["resource_address"])
     mux = kmux(EQUIPMENT_INFO["MUX"]["resource_address"])
@@ -224,10 +233,12 @@ def initialize_lcr_mux():
 def setup_all_stim_intan(rhx, stim_on):
     # When stim_on is True, all channels are set to values under test_information/samples
     # When stim_on is False, all channels are set to zero and disabled
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d %H:%M:%S")
     if stim_on:
-        print("Setting up stim (this takes a few minutes).")
+        print(f"Setting up stim at {now} (this takes ~2 minutes).")
     else:
-        print("Disabling stim (this takes a few minutes).")
+        print(f"Disabling stim at {now} (this takes ~2 minutes).")
 
 
     for group in os.listdir(DATA_PATH):
@@ -272,8 +283,8 @@ def check_for_due_tests(current_datetime):
     lcr_groups = []
     arduino_groups = []
     intan_eis_frequencies = set()
-        # Intan tests impedance for all electrodes at the same time, so this information gets 
-        # collected here rather than repeating EIS multiple times when iterating through each group
+    # Intan tests impedance for all electrodes at the same time, so this information gets 
+    # collected here rather than repeating EIS multiple times when iterating through each group
 
     # Loop through each group to see if testing is due
     for group in os.listdir(DATA_PATH):
@@ -339,10 +350,25 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
     # Take timestamp for measurement
     measurement_time = datetime.datetime.now()
 
-    # Create a list of intan channels, samples of interest from groups
-    channels = []
-    samples = []
-    # temperatures = [] # Will have equal length to groups, not channels/samples
+    # Loop through each frequency and measure
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d %H:%M:%S")
+    print(f'Measuring impedances at {now} (this takes ~2-3 minutes).')
+    freq_actual = []
+    filenames = []
+    for freq in frequencies:
+        if freq < 30 or freq > 5060: # Intan won't test outside this range
+            continue
+
+        # Measure impedance and store to temp folder
+        directory = os.getcwd()
+        file, freq_a = rhx.measure_impedance(f"{directory}/data/temp/", freq)
+
+        # Save filename and actual frequency
+        freq_actual.append(freq_a)
+        filenames.append(file)
+
+    # Loop through each group to organize data
     for group in groups:
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
@@ -351,139 +377,77 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
         if not any("EIS-Intan" in test for test in group_info["test_info"]["tests"]):
             continue
 
+        # Pull group sample and channel info
         channels_g = [sample["intan_channel"] for sample in group_info["samples"].values()]
-        channels = channels + channels_g
 
-        samples_g = list(group_info["samples"].keys())
-        samples = samples + samples_g
+        # Initiate impedance and phase lists
+        impedance_g = []
+        phase_g = []
 
-        # # also measure temperature for each group and save it
-        # temperature = measure_temperature(sample, group_info, EQUIPMENT_INFO)
-        # temperatures.append(temperature)
+        # Loop through each sample
+        for channel_i in channels_g:
+            channel_i_cap = channel_i.upper()
 
-    # Empty lists will be added to as tests are run
-    impedances = []
-    phases = []
-    frequencies_updated = []
+            # Loop through each file
+            for f, file in enumerate(filenames):
+                # Find frequency
+                freq_a = freq_actual[f]
 
-    # Loop through each frequency
-    print('Measuring impedances...')
-    for freq in frequencies:
-        if freq < 30 or freq > 5060: # Intan won't test outside this range
-            continue
+                # Import saved impedance data
+                saved_impedances = pd.read_csv(f"{directory}/data/temp/{file}.csv")
 
-        # Measure impedance and store to temp folder
-        directory = os.getcwd()
-        filename, freq = rhx.measure_impedance(f"{directory}/data/temp/", freq)
+                # Pull only data corresponding to current group from the file
+                sample_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i_cap].iloc[0, 1]
+                sample_i_cap = sample_i.upper()
+                
+                impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i_cap].iloc[0, 4]
+                phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i_cap].iloc[0, 5]
 
-        # Import saved impedance data
-        saved_impedances = pd.read_csv(f"{directory}/data/temp/{filename}.csv")
+                # Update groups
+                impedance_g.append(impedance_i)
+                phase_g.append(phase_i)
 
-        # Delete the temp file
-        os.remove(f"{directory}/data/temp/{filename}.csv")
+                if round(freq_a) == 1000:
+                    impedance_i_1k = impedance_i
+                    phase_i_1k = phase_i
 
-        # Pull data from only the current channels under test
-        for channel_i in channels:
-            channel_i = channel_i.capitalize()
-            impedance_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 4]
-            phase_i = saved_impedances.loc[saved_impedances['Channel Number'] == channel_i].iloc[0, 5]
-        
-            impedances.append(impedance_i)
-            phases.append(phase_i)
-            channels.append(channel_i)
-            frequencies_updated.append(freq)
+                    # Measure temperature for the given sample
+                    temperature_i = measure_temperature(sample_i_cap, group_info, EQUIPMENT_INFO)
 
-    # Once through all frequencies, separate EIS data by group and channel
-    print(channels)
-    for g, group in enumerate(groups):
-        print(group)
-        with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
-            group_info = json.load(f)
+                    # If the sample is broken, change values to NaN
+                    if sample_i in group_info["broken_devices"]:
+                        impedance_i_1k = float("NaN")
+                        phase_i_1k = float("NaN")
 
-        # # Find number of days since start
-        # first_day = group_info["start_date"]
-        # first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
-
-        # real_days = measurement_time - first_day
-        # real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-        
-        for i, channel_i in enumerate(channels):
-            print(channel_i, group_info["samples"])
-            # If the channel is not in the group, skip it
-            if channel_i not in [sample["intan_channel"] for sample in group_info["samples"].values()]:
-                print('continuing')
-                continue
-
-            channel_i_cap = channel_i.capitalize()
-            sample_i = samples[i]
-
-            # List frequencies and impedances corresponding to the current channel
-            frequencies_i = [f for ch, f in zip(channels, frequencies_updated) if ch == channel_i_cap]
-            impedance_i = [imp for ch, imp in zip(channels, impedances) if ch == channel_i_cap]
-            impedance_i_1k = impedance_i[frequencies_i.index(1000)]
-
-            phase_i = [ph for ch, ph in zip(channels, phases) if ch == channel_i_cap]
-            phase_i_1k = phase_i[frequencies_i.index(1000)]
-
-            # temperature_i = temperatures[g]
-
-            # # Open data summary
-            # df = pd.read_csv(f"{DATA_PATH}/{group}/{sample_i}_data_summary.csv")
-            # df = df.drop(columns=["Unnamed: 0"], axis=1)
-
-            # Measure temperature for the given sample
-            temperature_i = measure_temperature(sample_i, group_info, EQUIPMENT_INFO)
-
-            # If the sample is broken, change values to NaN
-            if sample_i in group_info["broken_devices"]:
-                impedance_i_1k = float("NaN")
-                phase_i_1k = float("NaN")
-            
-            # Save 1k impedance magnitude and phase to sample_data_summary
-            record_impedance_data_to_summary(group, sample_i, measurement_time, impedance_i_1k, phase_i_1k, temperature_i, DATA_PATH, group_info)
-            # new_row = pd.DataFrame({
-            #     "Measurement Datetime": [measurement_time],
-            #     "Pulsing On": [False],
-            #     "Temperature (C)": [temperature_i],
-            #     "Real Days": [real_days],
-            #     "Impedance Magnitude at 1000 Hz (ohms)": [impedance_i_1k],
-            #     "Impedance Phase at 1000 Hz (degrees)": [phase_i_1k],
-            #     "Charge Injection Capacity @ 1000 us (uC/cm^2)": [float("NaN")]
-            # })
-
-            # # drop any columns that are all NA
-            # new_row = new_row.dropna(axis=1, how="all")
-
-            # if df.empty:
-            #     new_df = new_row.copy()
-            # elif new_row.empty:
-            #     new_df = df.copy()
-            # else:
-            #     new_df = pd.concat([df, new_row], ignore_index=True)
-
-            # new_df.to_csv(f"{DATA_PATH}/{group}/{sample_i}_data_summary.csv")
-
-            # impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Magnitude at 1000 Hz (ohms)'] = impedance_i_1k
-            # impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, f'Impedance Phase at 1000 Hz (degrees)'] = phase_i_1k
-            # impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Temperature (C)'] = temperature_i
+                    # Save 1k impedance magnitude and phase to sample_data_summary
+                    record_impedance_data_to_summary(group, sample_i_cap, measurement_time, impedance_i_1k, phase_i_1k, temperature_i, DATA_PATH, group_info)
 
             # If sample is not broken, save EIS data separately by channel
-            if sample_i not in group_info["broken_devices"]:
+            if sample_i_cap not in group_info["broken_devices"]:
                 freq_data = {
-                    "Frequency": frequencies_i,
+                    "Frequency": freq_actual,
                     "Impedance": impedance_i,
                     "Phase Angle": phase_i,
-                    "Temperature (Dry Bath)": [temperature_i] * len(frequencies_i),
+                    "Temperature (Dry Bath)": [temperature_i] * len(freq_actual),
                 }
                 freq_data_df = pd.DataFrame(freq_data)
 
-                for group, devices in groups.items():
-                    if sample_i in devices:
-                        file_path = f"{DATA_PATH}/{group}/intan-eis/EIS_{sample_i}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+                file_path = f"{DATA_PATH}/{group}/raw-data/intan-eis/EIS_{sample_i}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
                 
                 freq_data_df.to_csv(file_path, index=False)
 
+    # When done, delete temp files
+    for file in filenames:
+        os.remove(f"{directory}/data/temp/{file}.csv")
+
 def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
+    # Counter to pause and reset every 5 channels - otherwise intan gets overwhelmed
+    counter = 0
+
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d %H:%M:%S")
+    print(f'Starting VT tests at {now} (this takes ~30 minutes).')
+
     # Loop through each group for testing
     for group in groups:
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
@@ -505,14 +469,9 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
         vt_interphase = TEST_INFO["VT-Intan"]["vt_interphase"]
         vt_frequency = TEST_INFO["VT-Intan"]["vt_frequency"]
 
-        print(f"Running VT test for group: {group}.")
         rhx.reset()
 
-        # max_current_list = []
-        # cic_list = []
-
         # Disable all channels
-        print("Disabling all currents for test (this takes a few seconds)...")
         setup_all_stim_intan(rhx, False)
 
         # Loop through each channel and run VT test
@@ -545,8 +504,6 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
             # Start testing
-            print(f"Testing sample {sample_i} (channel {channel_i})")   
-
             # Measure at 4 points, starting at vt_start[i] and scaling down
             for current_i in [vt_start[i], int(0.9*vt_start[i]), int(0.8*vt_start[i]), int(0.7*vt_start[i])]:
                 # Enable current channel and set current
@@ -557,34 +514,59 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
                 rhx.start_board()
                 time.sleep(1)
                 rhx.stop_board()
+                time.sleep(0.5)
                 
                 # Read data from board
                 buffer_size = EQUIPMENT_INFO["Intan"]["waveform_buffer_per_second_per_channel"]
-                time_seconds, voltage_microvolts = rhx.read_data(buffer_size, sample_frequency)
-            
-                # Create dataframe
-                vt_data = {
-                    'Time (s)': time_seconds,
-                    'Voltage (uV)': voltage_microvolts
-                }
-                vt_data = pd.DataFrame(vt_data)
+                time_seconds, voltage_microvolts, repeat_test, failure = rhx.read_data(buffer_size, sample_frequency, False)
 
-                # Calculate and store ep
-                ep = calculate_ep(vt_data, vt_pulse_width, vt_interphase)
-                currents_tested.append(current_i)
-                eps_calculated.append(ep)
+                # If the magic number is incorrect, repeat stim and try again
+                if repeat_test:
+                    # Wait 30 seconds to reset
+                    time.sleep(30)
+
+                    # Stim for 1 second
+                    rhx.start_board()
+                    time.sleep(1)
+                    rhx.stop_board()
+                    time.sleep(0.5)
+                    
+                    # Read data from board
+                    buffer_size = EQUIPMENT_INFO["Intan"]["waveform_buffer_per_second_per_channel"]
+                    time_seconds, voltage_microvolts, repeat_test, failure = rhx.read_data(buffer_size, sample_frequency, True)
+
+                    if failure:
+                        print('Data read failed, skipping data point - no action needed.')
+            
+                # If the test was successful, create dataframe to calculate ep
+                if not failure:
+                    vt_data = {
+                        'Time (s)': time_seconds,
+                        'Voltage (uV)': voltage_microvolts
+                    }
+                    vt_data = pd.DataFrame(vt_data)
+
+                    # Calculate and store ep
+                    ep = calculate_ep(vt_data, vt_pulse_width, vt_interphase)
+                    currents_tested.append(current_i)
+                    eps_calculated.append(ep)
 
             # Disable current channel
             rhx.set_stim_parameters(channel_i, 0, 0, 0, 0, sample_i)
             rhx.disable_stim(channel_i)
             rhx.disable_data_output(channel_i)
 
-            # Calculate max current and CIC
-            coeff = np.polyfit(eps_calculated, currents_tested, 1)
-            bestfit = np.poly1d(coeff)
-            max_current = bestfit(0.6)
+            # If there's enough data, calculate max current and CIC
+            if len(eps_calculated) > 2:
+                coeff = np.polyfit(eps_calculated, currents_tested, 1)
+                bestfit = np.poly1d(coeff)
+                max_current = bestfit(0.6)
 
-            cic = max_current * (vt_pulse_width / 1000000) / (gsa_i / 100) # uA * s / cm^2
+                cic = max_current * (vt_pulse_width / 1000000) / (gsa_i / 100) # uA * s / cm^2
+            
+            else:
+                max_current = 1
+                cic = float('NaN')
 
             # Force poorly performing devices to 1 so they continue being tested
             if max_current <= 0:
@@ -594,12 +576,6 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
             # Save cic to sample_data_summary
             df.loc[len(df)-1, 'Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic
             df.to_csv(f"{DATA_PATH}/{group}/{sample_i}_data_summary.csv")
-            print(f"saved vt to: {DATA_PATH}/{group}/{sample_i}_data_summary.csv")
-
-            # # Save CIC to impedance_temperature_cic
-            # impedance_temperature_cic.loc[impedance_temperature_cic['Channel Number'] == channel_i, 'Charge Injection Capacity @ 1000 us (uC/cm^2)'] = cic
-
-            print(f"CIC at 1000 us pulse width: {cic} uC/cm^2")
 
             # Save max current back to json
             # Scale back max current if needed - we don't want to do VT test above stim level (high stim can accelerate aging)
@@ -618,6 +594,15 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
 
             with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
                 group_info = json.load(f)
+
+            # Iterate counter and flush buffer every 5 electrodes
+            counter += 1
+            if counter >= 5:
+                counter = 0
+                # Wait 30 seconds to reset
+                print("Pausing to prevent data loss.")
+                time.sleep(30)
+                print('Resuming VT test.')
 
 def calculate_ep(vt_data, pulse_width, interphase):
     vt_adjusted = vt_data
@@ -654,7 +639,10 @@ def calculate_ep(vt_data, pulse_width, interphase):
 
     return ep
 
-def perform_lcr_measurements(lcx100, mux, lcr_groups):
+def perform_lcr_measurements(lcr_groups):
+    # Initialize the LCR and mux
+    lcx100, mux = initialize_lcr_mux()
+
     # Loop through each group
     for group in lcr_groups:
         # Pull sample information
@@ -690,7 +678,7 @@ def perform_lcr_measurements(lcx100, mux, lcr_groups):
                     mux.close_channels(mux_channel_2[0], [mux_channel_2[1]])
 
                     # Run LCR EIS and save data
-                    measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage)
+                    measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info)
 
                     # Open mux channels
                     mux.open_channels(mux_channel_1[0], [mux_channel_1[1]])
@@ -706,21 +694,10 @@ def perform_lcr_measurements(lcx100, mux, lcr_groups):
 
 def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info):
     counter = 0
-    freq_data = []
+    impedance_temperature = []
 
     # Save timestamp
     measurement_time = datetime.datetime.now()
-    
-    # # Find number of days since start
-    # first_day = group_info["start_date"]
-    # first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
-
-    # real_days = measurement_time - first_day
-    # real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-    # # Open data summary
-    # df = pd.read_csv(f"{DATA_PATH}/{group}/{sample}_data_summary.csv")
-    # df = df.drop(columns=["Unnamed: 0"], axis=1)
 
     # Set LCR voltage
     lcx100.set_voltage(test_voltage)
@@ -741,7 +718,7 @@ def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage,
         temperature = measure_temperature(sample, group_info, EQUIPMENT_INFO)
 
         # Save data to array
-        freq_data.append(
+        impedance_temperature.append(
             {
                 "Frequency": freq,
                 "Impedance": float(impedance),
@@ -754,9 +731,9 @@ def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage,
         if freq == 1000:
             for test in group_info["test_info"]["tests"]:
                 # If it's an RH test, convert to humidity first
-                if "LCR-RH" in test:
+                if "RH-LCR" in test:
                     # Impedance -> RH conversion is from the datasheet, corrected for temperature
-                    impedance_kohms = impedance / 1000
+                    impedance_kohms = float(impedance) / 1000
                     rh = (impedance_kohms / (1.92e22 * temperature ** -7.57)) ** (1 / (-6.99 + 0.052 * temperature - 0.000225 * temperature ** 2))
 
                     record_rh_data_to_summary(group, sample, measurement_time, rh, temperature, DATA_PATH, group_info)
@@ -764,31 +741,12 @@ def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage,
                 # Otherwise, save raw Z data
                 else:
                     record_impedance_data_to_summary(group, sample, measurement_time, impedance, phase, temperature, DATA_PATH, group_info)
-        # new_row = pd.DataFrame({
-        #     "Measurement Datetime": [measurement_time],
-        #     "Temperature (C)": [temperature],
-        #     "Real Days": [real_days],
-        #     "Impedance Magnitude at 1000 Hz (ohms)": [float("NaN")],
-        #     "Impedance Phase at 1000 Hz (degrees)": [float("NaN")]
-        # })
-
-        # # drop any columns that are all NA
-        # new_row = new_row.dropna(axis=1, how="all")
-
-        # if df.empty:
-        #     new_df = new_row.copy()
-        # elif new_row.empty:
-        #     new_df = df.copy()
-        # else:
-        #     new_df = pd.concat([df, new_row], ignore_index=True)
-
-        # new_df.to_csv(f"{DATA_PATH}/{group}/{sample}_data_summary.csv")
 
     # Save EIS data
     impedance_temperature = pd.DataFrame(impedance_temperature)
 
     filename = f"EIS_{sample}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-    file_path = f"./data/{group}/{filename}.csv"
+    file_path = f"./data/{group}/raw-data/{filename}.csv"
     impedance_temperature.to_csv(file_path, index=False)
 
 def perform_arduino_measurements(arduino_groups):
@@ -802,7 +760,7 @@ def perform_arduino_measurements(arduino_groups):
             group_info = json.load(f)
 
         # If RH testing is not included, skip the group
-        if "Arduino-RH" not in group_info["test_info"]["tests"]:
+        if "RH-Arduino" not in group_info["test_info"]["tests"]:
             continue
 
         # Setup serial connection
@@ -814,12 +772,7 @@ def perform_arduino_measurements(arduino_groups):
 
         # Wait for data
         try:
-            print("Waiting for serial data...")
             line = ser.readline().decode('utf-8').strip()
-            # if line:
-            #     print("Latest output:", line)
-            # else:
-            #     print("No data received within timeout period.")
         finally:
             ser.close()
 
@@ -827,7 +780,7 @@ def perform_arduino_measurements(arduino_groups):
         for sample_i in group_info["samples"]:
             index_i = line.index(sample_i) + len(sample_i) + 2
 
-            data = line[index_i:(index_i+18)]
+            data = line[index_i:(index_i+15)]
             rh_index = data.index("RH=") + 3
             temp_index = data.index("T=") + 2
 
@@ -903,11 +856,18 @@ def process_all_data():
         last_update = group_info["slack_updates"]["last_update_months"]
         update_cadence = group_info["slack_updates"]["cadence_months"]
 
+        start_date = group_info["start_date"]
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M")
+
         last_test = group_info["test_info"]["last_test"]
         last_test = datetime.datetime.strptime(last_test, "%Y-%m-%d %H:%M")
-        last_test = last_test.total_seconds() / 24 / 60 / 60 / 365.25 * 12 # convert to months
 
-        if last_test - update_cadence > last_update:
+        print()
+        time_elapsed = last_test - start_date
+        time_elapsed = time_elapsed.total_seconds() / 24 / 60 / 60 / 365.25 * 12 # convert to months
+        print('processing', group,  time_elapsed, update_cadence, last_update)
+
+        if time_elapsed - update_cadence > last_update:
             notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], summary)
             print(summary)
 

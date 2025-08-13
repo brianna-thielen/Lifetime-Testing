@@ -53,7 +53,7 @@ class LCX100:
             None
         """
         self.lcx.write("*RST")
-        print("LCR resetting...")
+        # print("LCR resetting...")
 
     def initialize(self):
         """
@@ -63,7 +63,7 @@ class LCX100:
             None
         """
         self.lcx.write("INIT")
-        print("LCR initializing...")
+        # print("LCR initializing...")
 
     def set_aperture(self, aperture):
         """
