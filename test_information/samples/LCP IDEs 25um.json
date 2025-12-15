@@ -1,0 +1,133 @@
+{
+    "start_date": "2024-11-15 15:20",
+    "flagged_dates": {
+        "switched to automated testing": "2024-12-23 18:17",
+        "replaced PBS": "2025-3-27 17:50",
+        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
+    },
+    "samples": {
+        "IDE-25-1": {
+            "mux_channels": [
+                [
+                    1,
+                    10
+                ],
+                [
+                    1,
+                    30
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-2": {
+            "mux_channels": [
+                [
+                    1,
+                    20
+                ],
+                [
+                    1,
+                    40
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-3": {
+            "mux_channels": [
+                [
+                    1,
+                    9
+                ],
+                [
+                    1,
+                    29
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-4": {
+            "mux_channels": [
+                [
+                    1,
+                    19
+                ],
+                [
+                    1,
+                    39
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-5": {
+            "mux_channels": [
+                [
+                    1,
+                    8
+                ],
+                [
+                    1,
+                    28
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-6": {
+            "mux_channels": [
+                [
+                    1,
+                    18
+                ],
+                [
+                    1,
+                    38
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-7": {
+            "mux_channels": [
+                [
+                    1,
+                    7
+                ],
+                [
+                    1,
+                    27
+                ]
+            ],
+            "temp_sensor_id": 2
+        },
+        "IDE-25-8": {
+            "mux_channels": [
+                [
+                    1,
+                    17
+                ],
+                [
+                    1,
+                    37
+                ]
+            ],
+            "temp_sensor_id": 2
+        }
+    },
+    "broken_devices": [],
+    "flags": {
+        "Z": 10000,
+        "Z change": 0.8
+    },
+    "test_info": {
+        "tests": [
+            "EIS-LCR-3"
+        ],
+        "temp_sensor_type": "phidget",
+        "thermocouple_type": "J",
+        "temp_offset": 3.5,
+        "cadence_hrs": 24,
+        "last_test": "2025-12-13 23:05"
+    },
+    "slack_updates": {
+        "cadence_accel_months": 12,
+        "last_update_accel_months": 97.5
+    }
+}

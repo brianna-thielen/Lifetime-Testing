@@ -51,7 +51,7 @@ class KeithleyMUX:
             None
         """
         self.mux.write("*RST")
-        print("MUX resetting...")
+        # print("MUX resetting...")
 
     def initialize(self):
         """
@@ -67,7 +67,7 @@ class KeithleyMUX:
             None
         """
         self.mux.write("INIT")
-        print("MUX initializing...")
+        # print("MUX initializing...")
 
     def reset_and_initialize(self):
         """

@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 Last heartbeat: 2025-06-27 12:03:16
+=======
+Last heartbeat: 2025-12-14 19:00:52
+>>>>>>> standardize-testing

@@ -1,0 +1,133 @@
+{
+    "start_date": "2024-11-7 7:43",
+    "flagged_dates": {
+        "switched to automated testing": "2024-12-13 18:17",
+        "increased stimulation 3x on samples 3/4/8/9": "2025-1-10 11:16",
+        "replaced PBS": "2025-3-27 17:50",
+        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
+    },
+    "samples": {
+        "IR01": {
+            "intan_channel": "d-024",
+            "geom_surf_area": 1.7272,
+            "pulse_amplitude": 600,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 600.0,
+            "temp_sensor_id": 2
+        },
+        "IR02": {
+            "intan_channel": "d-025",
+            "geom_surf_area": 0.8103,
+            "pulse_amplitude": 600,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 95.19230769231696,
+            "temp_sensor_id": 2
+        },
+        "IR03": {
+            "intan_channel": "d-026",
+            "geom_surf_area": 1.1716,
+            "pulse_amplitude": 1800,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 0.9,
+            "temp_sensor_id": 2
+        },
+        "IR04": {
+            "intan_channel": "d-027",
+            "geom_surf_area": 1.2028,
+            "pulse_amplitude": 1800,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 1800.0,
+            "temp_sensor_id": 2
+        },
+        "IR05": {
+            "intan_channel": "d-007",
+            "geom_surf_area": 1.4268,
+            "pulse_amplitude": 0,
+            "pulse_width": 0,
+            "pulse_interphase": 0,
+            "pulse_frequency": 0,
+            "initial_i_max": 552.392307692376,
+            "temp_sensor_id": 2
+        },
+        "IR06": {
+            "intan_channel": "d-028",
+            "geom_surf_area": 1.377,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 42.05881254667668,
+            "temp_sensor_id": 2
+        },
+        "IR07": {
+            "intan_channel": "d-029",
+            "geom_surf_area": 0.594,
+            "pulse_amplitude": 400,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 0,
+            "temp_sensor_id": 2
+        },
+        "IR08": {
+            "intan_channel": "d-030",
+            "geom_surf_area": 0.8375,
+            "pulse_amplitude": 1200,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 42.01013762595233,
+            "temp_sensor_id": 2
+        },
+        "IR09": {
+            "intan_channel": "d-031",
+            "geom_surf_area": 1.008,
+            "pulse_amplitude": 1200,
+            "pulse_width": 200,
+            "pulse_interphase": 50,
+            "pulse_frequency": 50,
+            "initial_i_max": 42.01013762595233,
+            "temp_sensor_id": 2
+        },
+        "IR10": {
+            "intan_channel": "d-006",
+            "geom_surf_area": 1.2387,
+            "pulse_amplitude": 0,
+            "pulse_width": 0,
+            "pulse_interphase": 0,
+            "pulse_frequency": 0,
+            "initial_i_max": 71.46571438717366,
+            "temp_sensor_id": 2
+        }
+    },
+    "broken_devices": [
+        "IR07"
+    ],
+    "flags": {
+        "Z": 10000,
+        "CIC": 30
+    },
+    "test_info": {
+        "tests": [
+            "EIS-Intan-3",
+            "VT-Intan"
+        ],
+        "temp_sensor_type": "phidget",
+        "thermocouple_type": "J",
+        "temp_offset": 5,
+        "cadence_hrs": 24,
+        "last_test": "2025-12-13 23:05"
+    },
+    "slack_updates": {
+        "cadence_accel_months": 12,
+        "last_update_accel_months": 89.5
+    }
+}

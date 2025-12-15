@@ -16,7 +16,7 @@ _ELECTRODE_DATA = pd.DataFrame({
 	"Pulse Amplitude (uA)": [400, 400, 400, 400, 400, 400, 400, 400],
 })
 _STIM_FREQUENCY = 50 #Hz
-_START_DATE = datetime.datetime(2025, 4, 4, 4, 00)
+_START_DATE = datetime.datetime(2025, 4, 4, 16, 00)
 _ELECTRODES_TO_IGNORE = pd.DataFrame({
     "Channel Name": [],
     "Ignore From": []

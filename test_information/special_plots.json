@@ -1,0 +1,5 @@
+{
+    "Encapsulation Samples": ["LCP Encapsulation Capacitive", "LCP Encapsulation Resistive", "LCP Encapsulation Capacitive Ambient"],
+    "SIROF vs Bare Platinum Foil": ["Pt Foil", "SIROF on Pt Foil"],
+    "LCP IDEs": ["LCP IDEs 25um", "LCP IDEs 100um"]
+}

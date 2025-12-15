@@ -1,0 +1,11 @@
+Channel Number,Channel Name,Impedance Magnitude at 1000 Hz (ohms),Impedance Phase at 1000 Hz (degrees),Charge Injection Capacity @ 1000 us (uC/cm^2),Geometric Surface Area (mm^2),Temperature (C)
+a-024,IR01,772.0,62,,1.7272,65.3001
+a-025,IR02,629.0,59,,0.8103,65.3001
+a-026,IR03,1650.0,-19,,1.1716,65.3001
+a-027,IR04,687.0,60,,1.2028,65.3001
+a-011,IR05,60200.0,-24,,1.4268,65.3001
+a-023,IR06,408.0,-8,,1.377,65.3001
+a-022,IR07,81200.0,-27,,0.594,65.3001
+a-021,IR08,409.0,-9,,0.8375,65.3001
+a-020,IR09,277.0,-36,,1.008,65.3001
+a-004,IR10,371.0,-47,,1.2387,65.3001

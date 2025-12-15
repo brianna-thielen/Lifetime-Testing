@@ -3,7 +3,7 @@ $log = "C:\Scripts\bootlog.txt"
 
 Start-Sleep -Seconds 20  # wait for network stack to come up
 
-$webhookUrl = "https://hooks.slack.com/services/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"
+$webhookUrl = "https://hooks.slack.com/services/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"
 $hostname = $env:COMPUTERNAME
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 

@@ -27,7 +27,7 @@ class IntanRHS:
         """
 
         # Connect to TCP command server - default home IP address at port 5000.
-        print('Connecting to TCP command server...')
+        # print('Connecting to TCP command server...')
         self.scommand = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.scommand.connect(('127.0.0.1', 5000))
 
@@ -43,12 +43,12 @@ class IntanRHS:
 
     def connect_to_waveform_server(self):
         # Connect to TCP waveform server - default home IP address at port 5001.
-        print('Connecting to TCP waveform server...')
+        # print('Connecting to TCP waveform server...')
         self.swaveform = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.swaveform.connect(('127.0.0.1', 5001))
 
     def disconnect_from_waveform_server(self):
-        print('Disconnecting from TCP waveform server...')
+        # print('Disconnecting from TCP waveform server...')
         self.swaveform.close()
     
     def reset(self):
@@ -74,6 +74,13 @@ class IntanRHS:
             interphase (int): The interphase delay in microseconds.
             frequency (float): Frequency of stimulation pulse train in Hz. 0 for single pulse.
         """
+        # If amplitude, pulsewidth, or frequency are zero, the channel will be disabled
+        # Intan doesn't like zero pulse width or frequency, so set amplitude to zero and others to arbitrary values
+        if amplitude == 0 or pulsewidth == 0 or frequency == 0:
+            amplitude = 0
+            pulsewidth = 200
+            frequency = 50
+            
         # Enable stim on channel
         # self.scommand.sendall(b'set %s.stimenabled true' % channel)
         self.scommand.sendall(f'set {channel}.stimenabled true'.encode('utf-8'))
@@ -139,6 +146,11 @@ class IntanRHS:
         self.scommand.sendall(f'set {channel}.customchannelname {name}'.encode('utf-8'))
         time.sleep(0.12)
 
+        # If stim is zero, disable channel
+        if amplitude == 0 or pulsewidth == 0 or frequency == 0:
+            self.scommand.sendall(f'set {channel}.stimenabled false'.encode('utf-8'))
+            time.sleep(0.12)
+
     def disable_stim(self, channel):
         """
         Disables stim for a single channel
@@ -172,7 +184,7 @@ class IntanRHS:
         expectedReturnString = "Return: SampleRateHertz "
         # Look for "Return: SampleRateHertz N" where N is the sample rate.
         sample_frequency = float(commandReturn[len(expectedReturnString):])
-        print(f"Sample frequency: {int(sample_frequency / 1000)} kHz")
+        # print(f"Sample frequency: {int(sample_frequency / 1000)} kHz")
         return sample_frequency
     
     def enable_data_output(self, channel):
@@ -185,7 +197,7 @@ class IntanRHS:
         self.scommand.sendall(f'set {channel}.tcpdataoutputenableddc false'.encode('utf-8'))
         time.sleep(0.12)
     
-    def read_data(self, buffer_size, sample_frequency):
+    def read_data(self, buffer_size, sample_frequency, repeated_test):
         # 128 frames per block; standard data block size used by Intan
         frames_per_block = 128
 
@@ -221,7 +233,10 @@ class IntanRHS:
             # If not what's expected, raise an exception.
             magicNumber, rawIndex = readUint32(rawData, rawIndex)
             if magicNumber != 0x2ef07a08:
-                raise InvalidMagicNumber('Error... magic number incorrect')
+                if repeated_test:
+                    return float('NaN'), float('NaN'), False, True
+                else:
+                    return 0, 0, True, False
 
             # Each block should contain 128 frames of data - process each
             # of these one-by-one
@@ -238,12 +253,10 @@ class IntanRHS:
                 # Scale this sample to convert to microVolts
                 amplifierData.append(0.195 * (rawSample - 32768))
 
-        return amplifierTimestamps, amplifierData
+        return amplifierTimestamps, amplifierData, False, False
     
     def flush_buffer(self, buffer_size):
-        print("start")
         rawData = self.swaveform.recv(buffer_size)
-        print("end")
         
         
     def measure_impedance(self, folder, frequency=1000):
@@ -252,7 +265,7 @@ class IntanRHS:
         if os.path.exists(folder) == False:
             os.makedirs(folder)
             
-        filename = f"intanimpedance_1k_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+        filename = f"intanimpedance_{frequency}Hz_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
         # file_path = f"{folder}/{filename}.csv"
 
         self.scommand.sendall(f'set impedancefilename.basefilename {filename}.csv'.encode('utf-8'))
@@ -272,7 +285,20 @@ class IntanRHS:
         self.scommand.sendall(b'execute saveimpedance')
         time.sleep(1)
 
-        return filename
+        # Get actual measurement frequency
+        self.scommand.sendall(b'get actualimpedancefreqhertz')
+        commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8") #first one throws an error
+        if "ActualImpedanceFreqHertz" not in commandReturn: #this sometimes throws an error, so you have to command again
+            commandReturn = str(self.scommand.recv(COMMAND_BUFFER_SIZE), "utf-8")
+        if "ActualImpedanceFreqHertz" not in commandReturn: #if the second time doesn't work, give up
+            actual_frequency = float('NaN')
+        else:
+            expectedReturnString = "Return: ActualImpedanceFreqHertz "
+            freq_ind = commandReturn.find(expectedReturnString) + 33
+            # Look for "Return: ActualImpedanceFreqHertz N" where N is the measured frequency.
+            actual_frequency = float(commandReturn[freq_ind:])
+
+        return filename, actual_frequency
     
 
 def readUint32(array, arrayIndex):
