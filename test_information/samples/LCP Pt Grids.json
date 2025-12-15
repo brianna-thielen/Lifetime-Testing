@@ -1,6 +1,8 @@
 {
     "start_date": "2025-4-24 16:00",
-    "flagged_dates": {},
+    "flagged_dates": {
+        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
+    },
     "samples": {
         "G1X1-1": {
             "intan_channel": "d-023",
@@ -9,7 +11,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 56.29209979209492,
+            "initial_i_max": 146.40813503045445,
             "temp_sensor_id": 2
         },
         "G1X1-2": {
@@ -19,7 +21,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 51.23076923077181,
+            "initial_i_max": 33.94825174820196,
             "temp_sensor_id": 2
         },
         "G3X3S-1": {
@@ -29,7 +31,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 98.12079788927878,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G3X3S-2": {
@@ -39,7 +41,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 267.68181818181245,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G2X2S-1": {
@@ -49,7 +51,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 62.45062034740414,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G2X2S-2": {
@@ -59,7 +61,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 48.23218499291895,
+            "initial_i_max": 234.11538461540096,
             "temp_sensor_id": 2
         },
         "G2X2L-1": {
@@ -69,7 +71,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 55.94911242603854,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G2X2L-2": {
@@ -79,7 +81,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 49.66885553471194,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         }
     },
@@ -97,10 +99,10 @@
         "thermocouple_type": "J",
         "temp_offset": 5,
         "cadence_hrs": 24,
-        "last_test": "2025-8-12 09:37"
+        "last_test": "2025-12-13 23:05"
     },
     "slack_updates": {
-        "cadence_months": 6,
-        "last_update_months": 12
+        "cadence_accel_months": 6,
+        "last_update_accel_months": 51.0
     }
 }

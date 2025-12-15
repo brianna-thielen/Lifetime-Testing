@@ -48,7 +48,7 @@ def main():
 
     Various json files control all testing parameters and sample information:
 
-    - Each group of samples should have an associated json file under test_information/samples, containing:
+    - Each group of samples should have an associated json file under test_information/samples
         - start_date: the day and time that testing began (format "YYYY/MM/DD HH:MM" in 24 hour format)
         - flagged_dates: dictionary, initially empty, then add any dates (same format) with any important timestamps (e.g. "power loss", or "saline replaced")
             Note, if there are multiple dates for one flag (e.g. saline was replaced twice), enter those as a list under a single key (e.g. "saline replaced": ["2025-1-1 8:00", "2025-2-1 16:35"])
@@ -171,12 +171,10 @@ def main():
                 now = now.strftime("%m/%d %H:%M:%S")
                 print(f'Finished testing at {now}')
 
-            # # Process data to generate plots and flag any issues
-            # a = 1
-            # # if len(intan_groups + lcr_groups + arduino_groups) > 0:
-            # if a:
-            #     process_all_data()
-            #     a = 0
+            # Process data to generate plots and flag any issues
+            if len(intan_groups + lcr_groups + arduino_groups) > 0:
+                process_all_data()
+                a = 0
 
             # Write a heartbeat
             write_heartbeat()
@@ -771,13 +769,21 @@ def perform_arduino_measurements(arduino_groups):
         ser = serial.Serial(port, baudrate, timeout=timeout_sec)
 
         # Wait for data
+        # try:
+        #     line = ser.readline().decode('utf-8').strip()
+
+        # finally:
+        #     ser.close()
         try:
-            line = ser.readline().decode('utf-8').strip()
+            line = read_valid_line(ser)
         finally:
             ser.close()
 
         # Sort data
         for sample_i in group_info["samples"]:
+            print(line)
+            print(sample_i)
+            print(line.index(sample_i))
             index_i = line.index(sample_i) + len(sample_i) + 2
 
             data = line[index_i:(index_i+15)]
@@ -789,6 +795,15 @@ def perform_arduino_measurements(arduino_groups):
 
             # Save data to summary
             record_rh_data_to_summary(group, sample_i, measurement_time, rh, temperature, DATA_PATH, group_info)
+
+def read_valid_line(ser):
+    while True:
+        line = ser.readline().decode('utf-8', errors='ignore').strip()
+        print(f'line check: {line}')
+        if line.startswith("mins"):
+            return line
+        # otherwise keep looping
+
 
 def process_all_data():
     # Loop through each group
@@ -853,23 +868,25 @@ def process_all_data():
             summary = f"{group} testing at {round(accel_days/365.25, 1)} accelerated years, {flagged_samples_group}."
 
         # Save summary, if it's time for an update
-        last_update = group_info["slack_updates"]["last_update_months"]
-        update_cadence = group_info["slack_updates"]["cadence_months"]
+        last_update = group_info["slack_updates"]["last_update_accel_months"]
+        update_cadence = group_info["slack_updates"]["cadence_accel_months"]
 
         start_date = group_info["start_date"]
         start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M")
 
-        last_test = group_info["test_info"]["last_test"]
-        last_test = datetime.datetime.strptime(last_test, "%Y-%m-%d %H:%M")
+        current_test = round(accel_days/365.25*12, 1)
 
-        print()
-        time_elapsed = last_test - start_date
-        time_elapsed = time_elapsed.total_seconds() / 24 / 60 / 60 / 365.25 * 12 # convert to months
-        print('processing', group,  time_elapsed, update_cadence, last_update)
+        time_elapsed = current_test - float(last_update)
 
-        if time_elapsed - update_cadence > last_update:
+        if time_elapsed > update_cadence:
             notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], summary)
             print(summary)
+
+            # Update group info
+            group_info["slack_updates"]["last_update_accel_months"] = current_test
+
+            with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'w') as f:
+                json.dump(group_info, f, indent=4)
 
 def notify_slack(webhook, message):
     payload = {'text': message}
@@ -893,5 +910,5 @@ if __name__ == '__main__':
 
         if "KeyboardInterrupt" not in error_msg:
             notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], error_msg)
-        print(error_msg)
-        
+
+        print(error_msg)        

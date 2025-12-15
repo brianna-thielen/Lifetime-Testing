@@ -2,8 +2,9 @@
     "start_date": "2024-11-7 7:43",
     "flagged_dates": {
         "switched to automated testing": "2024-12-13 18:17",
-        "increased stimulation 3x on samples 3/4/8/9": "1-10-25 11:16",
-        "replaced PBS": "2025-3-27 17:50"
+        "increased stimulation 3x on samples 3/4/8/9": "2025-1-10 11:16",
+        "replaced PBS": "2025-3-27 17:50",
+        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
     },
     "samples": {
         "IR01": {
@@ -13,7 +14,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
+            "initial_i_max": 600.0,
             "temp_sensor_id": 2
         },
         "IR02": {
@@ -23,7 +24,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 162.1345343473421,
+            "initial_i_max": 95.19230769231696,
             "temp_sensor_id": 2
         },
         "IR03": {
@@ -33,7 +34,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 1130.8253938829994,
+            "initial_i_max": 0.9,
             "temp_sensor_id": 2
         },
         "IR04": {
@@ -43,7 +44,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 131.6720930232788,
+            "initial_i_max": 1800.0,
             "temp_sensor_id": 2
         },
         "IR05": {
@@ -53,7 +54,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 800.0,
+            "initial_i_max": 552.392307692376,
             "temp_sensor_id": 2
         },
         "IR06": {
@@ -63,7 +64,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0,
+            "initial_i_max": 42.05881254667668,
             "temp_sensor_id": 2
         },
         "IR07": {
@@ -83,7 +84,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 137.15074342590322,
+            "initial_i_max": 42.01013762595233,
             "temp_sensor_id": 2
         },
         "IR09": {
@@ -93,7 +94,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
+            "initial_i_max": 42.01013762595233,
             "temp_sensor_id": 2
         },
         "IR10": {
@@ -103,7 +104,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 101.60633484164013,
+            "initial_i_max": 71.46571438717366,
             "temp_sensor_id": 2
         }
     },
@@ -123,10 +124,10 @@
         "thermocouple_type": "J",
         "temp_offset": 5,
         "cadence_hrs": 24,
-        "last_test": "2025-8-12 09:37"
+        "last_test": "2025-12-13 23:05"
     },
     "slack_updates": {
-        "cadence_months": 12,
-        "last_update_months": 48
+        "cadence_accel_months": 12,
+        "last_update_accel_months": 89.5
     }
 }

@@ -1,8 +1,9 @@
 {
     "start_date": "2024-11-15 15:20",
     "flagged_dates": {
-        "switched to automated testing": "2024-12-13 18:17",
-        "replaced PBS": "2025-3-27 17:50"
+        "switched to automated testing": "2024-12-23 18:17",
+        "replaced PBS": "2025-3-27 17:50",
+        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
     },
     "samples": {
         "IDE-100-1": {
@@ -123,10 +124,10 @@
         "thermocouple_type": "J",
         "temp_offset": 3.5,
         "cadence_hrs": 24,
-        "last_test": "2025-8-12 09:37"
+        "last_test": "2025-12-13 23:05"
     },
     "slack_updates": {
-        "cadence_months": 12,
-        "last_update_months": 36
+        "cadence_accel_months": 12,
+        "last_update_accel_months": 97.6
     }
 }

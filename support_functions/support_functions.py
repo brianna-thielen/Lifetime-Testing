@@ -4,6 +4,7 @@ import pandas as pd
 import json
 import serial
 import numpy as np
+import math
 from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
 
 def measure_temperature(sample, group_info, equipment_info):
@@ -213,7 +214,8 @@ def record_rh_data_to_summary(group, sample, measurement_time, rh, temperature, 
 def calculate_accel_days_single(days, real_days_list, accel_days_list):
     # Find two values closest to days in real_days_list
     # Convert to numpy array
-    real_days_list = np.array(real_days_list)
+
+    real_days_list = np.array(real_days_list['Real Days'])
     accel_days_list = np.array(accel_days_list)
 
     # Find where "days" would be inserted
@@ -244,17 +246,24 @@ def calculate_accel_days(real_days, temperature):
     accel_days = [0]
 
     # First entry should be zero
-    if real_days[0] != 0:
-        real_days.insert(0, 0)
-        temperature.insert(0, temperature[0])
+    if real_days['Real Days'].loc[0] != 0:
+        day_zero = pd.DataFrame({'Real Days': [0]})
+        temp_zero = pd.DataFrame({'Temperature (C)': [temperature['Temperature (C)'].loc[0]]})
+        real_days = pd.concat([day_zero, real_days], ignore_index=True)
+        temperature = pd.concat([temp_zero, temperature], ignore_index=True)
 
     # Loop through each day and calculate
     for d in range(1, len(real_days)):
-        elapsed_days = real_days[d] - real_days[d-1]
-        temp = temperature[d]
+        elapsed_days = real_days['Real Days'].loc[d] - real_days['Real Days'].loc[d-1]
 
+        # If temperature is not nan, save it
+        if not math.isnan(temperature['Temperature (C)'].loc[d]):
+            temp = temperature['Temperature (C)'].loc[d]
+
+        # If there is a previous saved value in locals, use it (ie do nothing)
+
+        # Calculate accel_days
         accel_days_d = accel_days[d-1] + elapsed_days * 2 ** ((temp - 37) / 10)
-
         accel_days.append(accel_days_d)
 
     return accel_days

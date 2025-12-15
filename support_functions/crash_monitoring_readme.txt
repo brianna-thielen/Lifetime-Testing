@@ -1,10 +1,10 @@
-Note: the following instructions must be followed on the computer running lifetime testing to send restart notifications (in case of power bump) to Brianna.
+Note: the following instructions must be followed on the computer running lifetime testing to send restart notifications (in case of power bump) to lifetime-test-notification slack channel.
 
 *STEP 1*: Save NotifyStartup.ps1 to the folder C:\\Scripts
 
 When run, this code will send a notification to the following webhook, which sends a slack message to Brianna with notification that the computer has restarted
 
-[the program uses this slack webhook: https://hooks.slack.com/services/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]
+[the program uses this slack webhook: https://hooks.slack.com/services/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]
 
 *STEP 2*: Setup a task to run the program on reboot
 
