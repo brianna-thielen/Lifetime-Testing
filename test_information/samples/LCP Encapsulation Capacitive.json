@@ -38,7 +38,8 @@
         "last_test": "2026-1-6 12:18"
     },
     "slack_updates": {
-        "cadence_accel_months": 12,
+        "cadence_accel_months": -1,
         "last_update_accel_months": 79.2
-    }
+    },
+    "github_upload": true
 }

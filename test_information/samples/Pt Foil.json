@@ -127,7 +127,8 @@
         "last_test": "2026-1-6 00:18"
     },
     "slack_updates": {
-        "cadence_accel_months": 12,
+        "cadence_accel_months": -1,
         "last_update_accel_months": 89.6
-    }
+    },
+    "github_upload": true
 }

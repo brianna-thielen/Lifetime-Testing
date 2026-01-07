@@ -1,8 +1,4 @@
 {
-    "crosstalk-LCR": {
-        "eis_frequencies": [1000.0],
-        "eis_amplitude": 1.0
-    },
     "EIS-LCR-3": {
         "eis_frequencies": [
             10.0,   21.5,   46.4, 
