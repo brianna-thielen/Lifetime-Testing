@@ -607,21 +607,27 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
         
             # Plot flagged dates
             flagged_dates_group = group_info["flagged_dates"]
-            for flag_g, date_g in flagged_dates_group.items():
-                # Convert to datetime
-                date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
+            for flag_g, dates_g in flagged_dates_group.items():
+                # If there's only one date, put it in a list
+                if isinstance(dates_g, str):
+                    dates_g = [dates_g]
 
-                # Calculate real days
-                first_day = group_info["start_date"]
-                first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
+                # Loop through each date in the flag
+                for date_g in dates_g:
+                    # Convert to datetime
+                    date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
 
-                days = date_g - first_day
-                days = days.total_seconds() / 24 / 60 / 60 # convert to days
+                    # Calculate real days
+                    first_day = group_info["start_date"]
+                    first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-                # Calculate accelerated days
-                accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
+                    days = date_g - first_day
+                    days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
-                add_vert_line(fig_rh, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shades[s], first_group)
+                    # Calculate accelerated days
+                    accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
+
+                    add_vert_line(fig_rh, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shades[s], first_group)
 
             # After first group, we don't want to plot labels on vertical lines anymore
             first_group = False
