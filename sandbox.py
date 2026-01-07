@@ -73,7 +73,7 @@ def setup_folders_and_gitignore():
             ignore_lines.append(ignore_path)
 
             # Sample information
-            ignore_path = f"{SAMPLE_INFORMATION_PATH}/{group}.json"
+            ignore_path = f"test_information/samples/{group}.json"
             ignore_lines.append(ignore_path)
 
     
