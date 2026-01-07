@@ -16,7 +16,9 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-REPO_PATH = Path(r"C:\Users\3DPrint-Integral\src\Lifetime-Testing\Lifetime-Testing")
+EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
+with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
+    EQUIPMENT_INFO = json.load(f)
 
 def git_commit_and_push(repo_path):
     def run(cmd):
@@ -28,7 +30,7 @@ def git_commit_and_push(repo_path):
     # Commit (will fail if nothing changed)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        run(["git", "commit", "-m", f"Auto data update {timestamp}"])
+        run(["git", "commit", "-m", f"Test data update {timestamp}"])
     except subprocess.CalledProcessError:
         # Happens when there is nothing to commit
         return
@@ -37,7 +39,7 @@ def git_commit_and_push(repo_path):
     run(["git", "push"])
 
 # call whenever you want to sync
-git_commit_and_push(REPO_PATH)
+git_commit_and_push(EQUIPMENT_INFO["Github"]["path"])
 
 
 # folder = f'C:/Users/3DPrint-Integral/src/Lifetime-Testing/Lifetime-Testing/data/LCP Encapsulation Capacitive/raw-data/'

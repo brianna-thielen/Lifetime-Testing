@@ -11,6 +11,8 @@ import requests
 import traceback
 import json
 import serial
+import subprocess
+from pathlib import Path
 
 from equipment.keithley_mux import KeithleyMUX as kmux
 from equipment.rs_lcx100 import LCX100 as lcx
@@ -28,7 +30,6 @@ from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_so
 SAMPLE_INFORMATION_PATH = './test_information/samples'
 EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
 TEST_INFORMATION_PATH = './test_information/tests.json'
-PLOT_INFORMATION_PATH = './test_information/special_plots.json'
 DATA_PATH = './data'
 PLOT_PATH = './data/Plots'
 
@@ -38,9 +39,6 @@ with open(TEST_INFORMATION_PATH, 'r') as f:
 
 with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
     EQUIPMENT_INFO = json.load(f)
-
-with open(PLOT_INFORMATION_PATH, 'r') as f:
-    PLOT_INFO = json.load(f)
 
 def main():
     """
@@ -84,11 +82,6 @@ def main():
         - slack_updates: dictionary containing:
             - cadence_months: how many accelerated months to wait between slack updates (recommend starting at low value (~0.5-2) then increasing to 12 once stable)
             - last_update_months: start at 0, will update automatically after sending updates
-    
-    - special_plots.json contains a list of extra plots
-        by default, plots are generated within each group reflecting tests performed
-        any groups which should be compared to each other should be included here
-        this should be in the format of "Plot Title": ["group 1", "group 2", ...] (accepts up to 5 groups)
     
     - tests.json contains all testing information
         this should not be edited unless a new type of test is added
@@ -174,7 +167,9 @@ def main():
             # Process data to generate plots and flag any issues
             if len(intan_groups + lcr_groups + arduino_groups) > 0:
                 process_all_data()
-                a = 0
+                
+                # Push data to github
+                git_commit_and_push(EQUIPMENT_INFO["Github"]["path"])
 
             # Write a heartbeat
             write_heartbeat()
@@ -804,7 +799,6 @@ def read_valid_line(ser):
             return line
         # otherwise keep looping
 
-
 def process_all_data():
     # Loop through each group
     for group in os.listdir(DATA_PATH):
@@ -817,12 +811,6 @@ def process_all_data():
         # Load group info
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
-
-        # # Check if there are any special plots
-        # special_plots = []
-        # for plot_title, plot_groups in PLOT_INFO.items():
-        #     if group in plot_groups:
-        #         special_plots.append(plot_title)
 
         # Loop through each test - those will define the plots that are generated
         for test in group_info["test_info"]["tests"]:
@@ -891,6 +879,24 @@ def process_all_data():
 def notify_slack(webhook, message):
     payload = {'text': message}
     requests.post(webhook, json=payload)
+
+def git_commit_and_push(repo_path):
+    def run(cmd):
+        subprocess.run(cmd, cwd=repo_path, check=True)
+
+    # Stage everything
+    run(["git", "add", "."])
+
+    # Commit (will fail if nothing changed)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        run(["git", "commit", "-m", f"Auto data update {timestamp}"])
+    except subprocess.CalledProcessError:
+        # Happens when there is nothing to commit
+        return
+
+    # Push
+    run(["git", "push"])
 
 def write_heartbeat():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
