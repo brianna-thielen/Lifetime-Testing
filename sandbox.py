@@ -20,6 +20,12 @@ EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
 with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
     EQUIPMENT_INFO = json.load(f)
 
+SAMPLE_INFORMATION_PATH = './test_information/samples'
+TEST_INFORMATION_PATH = './test_information/tests.json'
+DATA_PATH = './data'
+PLOT_PATH = './data/Plots'
+IGNORE_PATH = Path('./.gitignore')
+
 def git_commit_and_push(repo_path):
     def run(cmd):
         subprocess.run(cmd, cwd=repo_path, check=True)
@@ -37,6 +43,43 @@ def git_commit_and_push(repo_path):
 
     # Push
     run(["git", "push"])
+
+def setup_folders_and_gitignore():
+    # Check that all data folders exist and add necessary folders to gitignore
+    ignore_lines = [
+        "# Auto-generated .gitignore",
+        "# Do not edit manually\n"
+    ]
+
+    # Loop through all groups
+    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        # remove ".json" from group name
+        group = group[:-5]
+
+        # Open info
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
+            group_info = json.load(f)
+
+        # Make data folder if it doesn't already exist
+        data_folder = Path(f"{DATA_PATH}/{group}")
+        raw_data_folder = Path(f"{DATA_PATH}/{group}/raw-data")
+        data_folder.mkdir(parents=True, exist_ok=True)
+        raw_data_folder.mkdir(parents=True, exist_ok=True)
+
+        # Add to gitignore if specified in group_info
+        if not group_info["github_upload"]:
+            # Data folder
+            ignore_path = f"data/{group}"
+            ignore_lines.append(ignore_path)
+
+            # Sample information
+            ignore_path = f"{SAMPLE_INFORMATION_PATH}/{group}.json"
+            ignore_lines.append(ignore_path)
+
+    
+    IGNORE_PATH.write_text("\n".join(ignore_lines).rstrip() + "\n")
+
+setup_folders_and_gitignore()
 
 # call whenever you want to sync
 git_commit_and_push(EQUIPMENT_INFO["Github"]["path"])

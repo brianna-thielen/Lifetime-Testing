@@ -32,6 +32,7 @@ EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
 TEST_INFORMATION_PATH = './test_information/tests.json'
 DATA_PATH = './data'
 PLOT_PATH = './data/Plots'
+IGNORE_PATH = './.gitignore'
 
 # Import test, equipment, and plot information
 with open(TEST_INFORMATION_PATH, 'r') as f:
@@ -83,6 +84,7 @@ def main():
             - cadence_months: how many accelerated months to wait between slack updates (recommend starting at low value (~0.5-2) then increasing to 12 once stable)
                 a value of -1 means no testing updates will be sent (crash notifications will still be sent)
             - last_update_months: start at 0 (will update automatically after sending updates)
+        - github_upload: true if you want automatic data upload to the public github, false if you do not
     
     - tests.json contains all testing information
         this should not be edited unless a new type of test is added
@@ -900,6 +902,32 @@ def process_all_data():
 def notify_slack(webhook, message):
     payload = {'text': message}
     requests.post(webhook, json=payload)
+
+def setup_folders_and_gitignore():
+    # Check that all data folders exist and add necessary folders to gitignore
+    ignore_lines = [
+        "# Auto-generated .gitignore",
+        "# Do not edit manually\n"
+    ]
+
+    # Loop through all groups
+    for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        # Open info
+        with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
+            group_info = json.load(f)
+
+        # Make data folder if it doesn't already exist
+        data_folder = Path(f"{DATA_PATH}/{group}")
+        raw_data_folder = Path(f"{DATA_PATH}/{group}/raw-data")
+        data_folder.mkdir(parents=True, exist_ok=True)
+        raw_data_folder.mkdir(parents=True, exist_ok=True)
+
+        # Add to gitignore if specified in group_info
+        if not group_info["github_upload"]:
+            ignore_path = f"data/{group}"
+            ignore_lines.append(ignore_path)
+    
+    IGNORE_PATH.write_text("\n".join(ignore_lines).rstrip() + "\n")
 
 def git_commit_and_push(repo_path):
     def run(cmd):
