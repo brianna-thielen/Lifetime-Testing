@@ -118,7 +118,7 @@ def main():
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
     rhx.set_display()
-    setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
+    # setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
 
