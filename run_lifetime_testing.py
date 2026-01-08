@@ -947,27 +947,31 @@ def setup_folders_and_gitignore():
     IGNORE_PATH.write_text("\n".join(ignore_lines).rstrip() + "\n")
 
 def git_commit_and_push(repo_path):
+    print(f"Starting Github commit and push")
     def run(cmd):
-        subprocess.run(
-            cmd, 
-            cwd=repo_path, 
-            check=True
-        )
+        subprocess.run(cmd, cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
 
-    # Stage everything
-    run(["git", "add", "."])
-
-    # Commit (will fail if nothing changed)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # add a try statement so code continues running in case of git failures
     try:
-        run(["git", "commit", "-m", f"Auto data update {timestamp}"])
-        print(f"Committing data update to github as: Auto data update {timestamp}")
-    except subprocess.CalledProcessError:
-        # Happens when there is nothing to commit
-        return
+        # Stage everything
+        run(["git", "add", "."])
 
-    # Push
-    run(["git", "push"])
+        # Commit (will fail if nothing changed)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            run(["git", "commit", "-m", f"Auto data update {timestamp}"])
+            print(f"Committing data update to github as: Auto data update {timestamp}")
+        except subprocess.CalledProcessError:
+            # Happens when there is nothing to commit
+            return
+
+        # Push
+        run(["git", "push"])
+        print(f"Github push complete")
+
+    except subprocess.CalledProcessError as e:
+        print("Git operation failed: ", e)
+        notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Git operation failed: {e}")
 
 def write_heartbeat():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
