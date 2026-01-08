@@ -32,7 +32,7 @@ EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
 TEST_INFORMATION_PATH = './test_information/tests.json'
 DATA_PATH = './data'
 PLOT_PATH = './data/Plots'
-IGNORE_PATH = './.gitignore'
+IGNORE_PATH = Path('./.gitignore')
 
 # Import test, equipment, and plot information
 with open(TEST_INFORMATION_PATH, 'r') as f:
@@ -119,6 +119,9 @@ def main():
     rhx.start_board()
     print('Starting stim.')
 
+    # Setup data folders and gitignore
+    setup_folders_and_gitignore()
+
     # Start testing loop
     run_test = True
     try:
@@ -133,6 +136,9 @@ def main():
                 now = datetime.datetime.now()
                 now = now.strftime("%m/%d %H:%M:%S")
                 print(f'Starting testing at {now}')
+
+                # Also update folders and gitignore
+                setup_folders_and_gitignore()
 
             # Run Intan tests
             if len(intan_groups) > 0:
@@ -889,7 +895,7 @@ def process_all_data():
 
         time_elapsed = current_test - float(last_update)
 
-        if time_elapsed > update_cadence:
+        if time_elapsed > update_cadence and update_cadence > 0:
             notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], summary)
             print(summary)
 
@@ -912,6 +918,9 @@ def setup_folders_and_gitignore():
 
     # Loop through all groups
     for group in os.listdir(SAMPLE_INFORMATION_PATH):
+        # remove ".json" from group name
+        group = group[:-5]
+
         # Open info
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
@@ -924,8 +933,14 @@ def setup_folders_and_gitignore():
 
         # Add to gitignore if specified in group_info
         if not group_info["github_upload"]:
+            # Data folder
             ignore_path = f"data/{group}"
             ignore_lines.append(ignore_path)
+
+            # Sample information
+            ignore_path = f"test_information/samples/{group}.json"
+            ignore_lines.append(ignore_path)
+            print(ignore_lines)
     
     IGNORE_PATH.write_text("\n".join(ignore_lines).rstrip() + "\n")
 
