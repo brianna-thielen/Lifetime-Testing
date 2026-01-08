@@ -276,7 +276,6 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
     # remove colon from title to produce filename
     file_title = title.replace(":", "")
     fig_z.write_html(f"{plot_path}/{file_title}.html")
-    print(f"{plot_path}/{file_title}.html")
 
     if plot_on:
         fig_z.show()
@@ -528,7 +527,9 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
     fig_cic.update_yaxes(range=cic_norm_plot_range, row=1, col=2)
     fig_cic.update_yaxes(range=cic_norm_plot_range, row=2, col=2)
 
-    fig_cic.write_html(f"{plot_path}/{title}.html")
+    # remove colon from title to produce filename
+    file_title = title.replace(":", "")
+    fig_cic.write_html(f"{plot_path}/{file_title}.html")
 
     if plot_on:
         fig_cic.show()
@@ -666,7 +667,9 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
     fig_rh.update_yaxes(range=rh_plot_range, row=1, col=1)
     fig_rh.update_yaxes(range=[0, max_temp*1.3], row=2, col=1)
 
-    fig_rh.write_html(f"{plot_path}/{title}.html")
+    # remove colon from title to produce filename
+    file_title = title.replace(":", "")
+    fig_rh.write_html(f"{plot_path}/{file_title}.html")
 
     if plot_on:
         fig_rh.show()
