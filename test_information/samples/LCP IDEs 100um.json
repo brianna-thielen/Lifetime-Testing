@@ -129,8 +129,8 @@
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 3.5,
-        "cadence_hrs": 24,
-        "last_test": "2026-1-7 17:42"
+        "cadence_hrs": 12,
+        "last_test": "2026-1-8 05:42"
     },
     "slack_updates": {
         "cadence_accel_months": -1,

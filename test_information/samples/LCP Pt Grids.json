@@ -18,7 +18,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 164.45769230764625,
+            "initial_i_max": 153.20618729098146,
             "temp_sensor_id": 2
         },
         "G1X1-2": {
@@ -28,7 +28,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 215.19736438862037,
+            "initial_i_max": 221.69307692308925,
             "temp_sensor_id": 2
         },
         "G3X3S-1": {
@@ -48,7 +48,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 388.9941771375839,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G2X2S-1": {
@@ -105,8 +105,8 @@
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 5,
-        "cadence_hrs": 24,
-        "last_test": "2026-1-7 17:42"
+        "cadence_hrs": 12,
+        "last_test": "2026-1-8 05:42"
     },
     "slack_updates": {
         "cadence_accel_months": -1,

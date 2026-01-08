@@ -948,13 +948,10 @@ def setup_folders_and_gitignore():
 
 def git_commit_and_push(repo_path):
     def run(cmd):
-        # the DEVNULL statements stop the git output from printing
         subprocess.run(
             cmd, 
             cwd=repo_path, 
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            check=True
         )
 
     # Stage everything
