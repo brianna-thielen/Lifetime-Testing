@@ -1,5 +1,6 @@
 {
     "start_date": "2024-11-4 15:25",
+    "end_date": null,
     "flagged_dates": {
         "switched to automated testing": "2024-12-9 14:39",
         "power outage": [
@@ -25,7 +26,7 @@
         "arduino_port": "COM4",
         "arduino_baudrate": 9600,
         "cadence_hrs": 12,
-        "last_test": "2026-1-8 05:42"
+        "last_test": "2026-1-8 12:50"
     },
     "slack_updates": {
         "cadence_accel_months": -1,

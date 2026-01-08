@@ -1,5 +1,6 @@
 {
     "start_date": "2024-11-15 15:20",
+    "end_date": null,
     "flagged_dates": {
         "switched to automated testing": "2024-12-23 18:17",
         "replaced PBS": [
@@ -129,8 +130,8 @@
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 3.5,
-        "cadence_hrs": 24,
-        "last_test": "2026-1-8 11:12"
+        "cadence_hrs": 12,
+        "last_test": "2026-1-8 12:50"
     },
     "slack_updates": {
         "cadence_accel_months": -1,

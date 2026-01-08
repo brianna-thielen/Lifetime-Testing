@@ -1,5 +1,6 @@
 {
     "start_date": "2024-11-7 7:43",
+    "end_date": "2026-1-8 12:43",
     "flagged_dates": {
         "switched to automated testing": "2024-12-13 18:17",
         "increased stimulation 3x on samples 3/4/8/9": "2025-1-10 11:16",
@@ -129,7 +130,7 @@
         "temp_sensor_type": "phidget",
         "thermocouple_type": "J",
         "temp_offset": 5,
-        "cadence_hrs": 24,
+        "cadence_hrs": 12,
         "last_test": "2026-1-7 17:42"
     },
     "slack_updates": {

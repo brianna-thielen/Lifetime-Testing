@@ -3,6 +3,78 @@
 
 # To pause lifetime testing, use pause_lifetime_testing.py
 
+# Various json files control all testing parameters and sample information:
+
+# Each group of samples should have an associated json file under test_information/samples
+#   - start_date: the day and time that testing began (format "YYYY-MM-DD HH:MM" in 24 hour format)
+#   - end_date: the day and time that testing ended (format "YYYY-MM-DD HH:MM" in 24 hour format)
+#       note: this is only required if you want to keep the data in the directory. Alternately, you
+#           can remove the sample group json under test_information/samples and the data folder under
+#           data to stop testing
+#   - flagged_dates: dictionary, initially empty, then add any dates (same format) with any important timestamps (e.g. "power loss", or "saline replaced")
+#       note, if there are multiple dates for one flag (e.g. saline was replaced twice), enter those as a list under a single key (e.g. "replaced PBS": ["2025-1-1 8:00", "2025-2-1 16:35"])
+#   - samples: dictionary of sample names, each containing: (note: a "sample" is a single electrode, IDE, or humidity sensor)
+#       For parts connected to the Intan
+#       - intan_channel (format "a-001")
+#       - geom_surf_area: geometric surface area in mm^2
+#       - pulse_amplitude: continuous stim amplitude in uA
+#       - pulse_width: continuous stim pulse width in us
+#       - pulse_interphase: continuous stim interphase delay in us
+#       - pulse_frequency: continuous stim frequency in Hz
+#       - initial_i_max: starting point for CIC measurement (should not exceed stim amplitude - this will update with each test iteration)
+#       - temp_sensor_id: ID for which temperature sensor to use (which phidget port it's plugged into)
+#       For parts connected to the LCR meter
+#       - mux_channels: list of mux bus and channels to measure between (format "[bus, channel]", e.g. [[1, 10], [1, 30]])
+#           for IDEs: [1, 10] and [1, 30] would be the two contacts of a single IDE
+#           for EIS of electrodes: [1, 10] would be the working electrode and [1, 30] would be the counter electrode
+#       - temp_sensor_id: ID for which temperature sensor to use (which phidget port it's plugged into)
+#       For parts connected to the Arduino
+#       - temp_sensor_id: -1 (tells the code to use the humidity sensor's internal temp sensor)
+#   - broken_devices: list of broken sample names, testing will be skipped on these samples
+#   - flags: dictionary of pass/fail criteria for measurements ("Z" (ohms), "Z change" (decimal), "CIC" (uC/cm^2), "CIC change" (decimal), "RH" (%) accepted)
+#   - test_info: dictionary containing:
+#       - tests: list of tests to be run (must be listed in tests.json, details below)
+#       - temp_sensor_type: type of temperature sensor (must be listed in equipment.json, details below)
+#       - thermocouple_type: type of thermocouple used (J, K, etc)
+#       - temp_sensor_offset: offset from temperature reading (e.g. if the thermocouple reads 65 when the saline temperature is 60, enter 5)
+#       - cadence_hrs: how many hours to wait between tests
+#       - last_test: date and time of last test (format "MM/DD/YYYY HH:MM" in 24 hour format), start value anytime prior to start_date (this will update automatically)
+#       For parts connected via the arduino:
+#       - arduino_port: usb port the arduino is connected via (e.g. COM4)
+#       - arduino_baudrate: baudrate set in the arduino code (9600 default)
+#   - slack_updates: dictionary containing:
+#       - cadence_months: how many accelerated months to wait between slack updates (recommend starting at low value (~0.5-2) then increasing to 12 once stable)
+#           a value of -1 means no testing updates will be sent (crash notifications will still be sent)
+#       - last_update_months: start at 0 (will update automatically after sending updates)
+#   - github_upload: true if you want automatic data upload to the public github, false if you do not
+
+# tests.json contains all testing information
+#   this should not be edited unless a new type of test is added
+#   note: tests with Intan take a long time (lots of delays are added because the equipment is slow to respond and buffers need to be cleared often)
+#   - EIS-LCR-3: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 3 points per decade
+#   - EIS-LCR-5: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 5 points per decade
+#   - EIS-LCR-10: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 10 points per decade
+#   - EIS-Intan-1: EIS measured with the Intan at 1k Hz with 30, 3, 0.3 nA currents (they measure all 3, use an algorithm to select best result)
+#   - EIS-Intan-3: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 3 points per decade (Intan will not measure below 30 or above 5060 Hz)
+#   - EIS-Intan-5: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 5 points per decade
+#   - EIS-Intan-10: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 10 points per decade
+#   - VT-Intan: VT measured with the intan with 1000 us pulse width, 500 us interphase delay, and 10 pulses in 1 second (quicker measurement not possible with Intan's recording resolution)
+#   - RH-LCR: RH via analog humidity sensor measured with the LCR meter at 1k Hz and 1 V
+#   - RH-Arduino: RH via I2C sensor measured with the Arduino
+
+# equipment.json contains all equipment information
+#   this should not be edited unless new equipment is added or existing equipment is reconfigured
+#   - LCR: Rohde and Schwarz LCX100 LCR meter
+#   - MUX: Keithley 7002 Switch System
+#   - Intan: Intan RHS 128 channel Stim/Record System
+#   - phidget: Phidget 4-input temperature sensor: https://www.phidgets.com/?prodid=1222&pcid=87
+#   - rh-temp: Amphenol Advanced Sensors humidity/temperature sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire-/CC2D25-SIP/4732676
+#       note: it's not listed here as it doesn't have a software connection, but here's the link for the analog rh sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire/hs30p/4780893
+#   - Slack: instructions for replacing the webhook are in the README
+#   - Github: please don't change this path - this is referenced in a published paper
+#       note: if you don't want data pushed to github, you can override publishing in the sample information json
+
+
 import time
 import datetime
 import os
@@ -19,15 +91,15 @@ from pathlib import Path
 from equipment.keithley_mux import KeithleyMUX as kmux
 from equipment.rs_lcx100 import LCX100 as lcx
 from equipment.intan_rhs import IntanRHS as intan
-from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
+# from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
 
 from support_functions.support_functions import measure_temperature, record_timestamp, record_impedance_data_to_summary, record_rh_data_to_summary
 from support_functions.plotting_functions import plot_cic, plot_z, plot_rh
 
-from data_processing.lcp_encapsulation_data_processing import process_encapsulation_soak_data
-from data_processing.lcp_ide_data_processing import process_ide_soak_data
-from data_processing.sirof_vs_pt_data_processing import process_coating_soak_data
-from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_soak_data
+# from data_processing.lcp_encapsulation_data_processing import process_encapsulation_soak_data
+# from data_processing.lcp_ide_data_processing import process_ide_soak_data
+# from data_processing.sirof_vs_pt_data_processing import process_coating_soak_data
+# from data_processing.lcp_pt_grids_data_processing import process_lcp_pt_grids_soak_data
 
 SAMPLE_INFORMATION_PATH = './test_information/samples'
 EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
@@ -44,81 +116,12 @@ with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
     EQUIPMENT_INFO = json.load(f)
 
 def main():
-    """
-    Starts automated lifetime testing
-
-    Various json files control all testing parameters and sample information:
-
-    - Each group of samples should have an associated json file under test_information/samples
-        - start_date: the day and time that testing began (format "YYYY-MM-DD HH:MM" in 24 hour format)
-        - flagged_dates: dictionary, initially empty, then add any dates (same format) with any important timestamps (e.g. "power loss", or "saline replaced")
-            Note, if there are multiple dates for one flag (e.g. saline was replaced twice), enter those as a list under a single key (e.g. "replaced PBS": ["2025-1-1 8:00", "2025-2-1 16:35"])
-        - samples: dictionary of sample names, each containing: (note: a "sample" is a single electrode, IDE, or humidity sensor)
-            For parts connected to the Intan
-            - intan_channel (format "a-001")
-            - geom_surf_area: geometric surface area in mm^2
-            - pulse_amplitude: continuous stim amplitude in uA
-            - pulse_width: continuous stim pulse width in us
-            - pulse_interphase: continuous stim interphase delay in us
-            - pulse_frequency: continuous stim frequency in Hz
-            - initial_i_max: starting point for CIC measurement (should not exceed stim amplitude - this will update with each test iteration)
-            - temp_sensor_id: ID for which temperature sensor to use (which phidget port it's plugged into)
-            For parts connected to the LCR meter
-            - mux_channels: list of mux bus and channels to measure between (format "[bus, channel]", e.g. [[1, 10], [1, 30]])
-                for IDEs: [1, 10] and [1, 30] would be the two contacts of a single IDE
-                for EIS of electrodes: [1, 10] would be the working electrode and [1, 30] would be the counter electrode
-            - temp_sensor_id: ID for which temperature sensor to use (which phidget port it's plugged into)
-            For parts connected to the Arduino
-            - temp_sensor_id: -1 (tells the code to use the humidity sensor's internal temp sensor)
-        - broken_devices: list of broken sample names, testing will be skipped on these samples
-        - flags: dictionary of pass/fail criteria for measurements ("Z" (ohms), "Z change" (decimal), "CIC" (uC/cm^2), "CIC change" (decimal), "RH" (%) accepted)
-        - test_info: dictionary containing:
-            - tests: list of tests to be run (must be listed in tests.json, details below)
-            - temp_sensor_type: type of temperature sensor (must be listed in equipment.json, details below)
-            - thermocouple_type: type of thermocouple used (J, K, etc)
-            - temp_sensor_offset: offset from temperature reading (e.g. if the thermocouple reads 65 when the saline temperature is 60, enter 5)
-            - cadence_hrs: how many hours to wait between tests
-            - last_test: date and time of last test (format "MM/DD/YYYY HH:MM" in 24 hour format), start value anytime prior to start_date (this will update automatically)
-            For parts connected via the arduino:
-            - arduino_port: usb port the arduino is connected via (e.g. COM4)
-            - arduino_baudrate: baudrate set in the arduino code (9600 default)
-        - slack_updates: dictionary containing:
-            - cadence_months: how many accelerated months to wait between slack updates (recommend starting at low value (~0.5-2) then increasing to 12 once stable)
-                a value of -1 means no testing updates will be sent (crash notifications will still be sent)
-            - last_update_months: start at 0 (will update automatically after sending updates)
-        - github_upload: true if you want automatic data upload to the public github, false if you do not
-    
-    - tests.json contains all testing information
-        this should not be edited unless a new type of test is added
-        note: tests with Intan take a long time (lots of delays are added because the equipment is slow to respond and buffers need to be cleared often)
-        - EIS-LCR-3: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 3 points per decade
-        - EIS-LCR-5: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 5 points per decade
-        - EIS-LCR-10: EIS measured with the LCR meter from 10 to 10k Hz at 25 mV with 10 points per decade
-        - EIS-Intan-1: EIS measured with the Intan at 1k Hz with 30, 3, 0.3 nA currents (they measure all 3, use an algorithm to select best result)
-        - EIS-Intan-3: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 3 points per decade (Intan will not measure below 30 or above 5060 Hz)
-        - EIS-Intan-5: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 5 points per decade
-        - EIS-Intan-10: EIS measured with the Intan from 30 to 5060 Hz with 30, 3, 0.3 nA currents with 10 points per decade
-        - VT-Intan: VT measured with the intan with 1000 us pulse width, 500 us interphase delay, and 10 pulses in 1 second (quicker measurement not possible with Intan's recording resolution)
-        - RH-LCR: RH via analog humidity sensor measured with the LCR meter at 1k Hz and 1 V
-        - RH-Arduino: RH via I2C sensor measured with the Arduino
-
-    - equipment.json contains all equipment information
-        this should not be edited unless new equipment is added or existing equipment is reconfigured
-        - LCR: Rohde and Schwarz LCX100 LCR meter
-        - MUX: Keithley 7002 Switch System
-        - Intan: Intan RHS 128 channel Stim/Record System
-        - phidget: Phidget 4-input temperature sensor: https://www.phidgets.com/?prodid=1222&pcid=87
-        - rh-temp: Amphenol Advanced Sensors humidity/temperature sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire-/CC2D25-SIP/4732676
-            note: it's not listed here as it doesn't have a software connection, but here's the link for the analog rh sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire/hs30p/4780893
-        - Slack: instructions for replacing the webhook are in the README
-        - Github: please don't change this path - this is referenced in a published paper
-            note: if you don't want data pushed to github, you can override publishing in the sample information json
-    """
+    # Starts automated lifetime testing
 
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
     rhx.set_display()
-    # setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
+    setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
 
@@ -197,8 +200,7 @@ def main():
                 print(f'Finished testing at {now}')
 
             # Process data to generate plots and flag any issues
-            if True:
-            # if len(intan_groups + lcr_groups + arduino_groups) > 0:
+            if len(intan_groups + lcr_groups + arduino_groups) > 0:
                 process_all_data()
                 
                 # Push data to github
@@ -321,6 +323,10 @@ def check_for_due_tests(current_datetime):
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
+        # Ignore any groups where testing has concluded
+        if group_info["end_date"] is not None:
+            continue
+
         # Pull out the datetime of the last test and calculate the next test
         last_test = group_info["test_info"]["last_test"]
         last_test = datetime.datetime.strptime(last_test, "%Y-%m-%d %H:%M")
@@ -354,25 +360,13 @@ def check_for_due_tests(current_datetime):
     return intan_groups, lcr_groups, arduino_groups, intan_eis_frequencies
 
 def perform_intan_measurements(rhx, intan_eis_frequencies, intan_groups, sample_frequency):
-    # Setup dataframe to save intan test data
-    ztc_dict = {
-        'Channel Number': [None], 
-        'Channel Name': [None], 
-        'Impedance Magnitude at 1000 Hz (ohms)': [None],
-        'Impedance Phase at 1000 Hz (degrees)': [None],
-        'Temperature (C)': [None],
-        'Charge Injection Capacity @ 1000 us (uC/cm^2)': [None],
-        'Geometric Surface Area (mm^2)': [None]
-    }
-    impedance_temperature_cic = pd.DataFrame(ztc_dict)
-
     # Measure impedance (and temperature)
-    measure_intan_impedance(rhx, intan_groups, intan_eis_frequencies, impedance_temperature_cic)
+    measure_intan_impedance(rhx, intan_groups, intan_eis_frequencies)
 
     # Measure CIC
-    measure_intan_vt(rhx, intan_groups, sample_frequency, impedance_temperature_cic)
+    measure_intan_vt(rhx, intan_groups, sample_frequency)
 
-def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic):
+def measure_intan_impedance(rhx, groups, frequencies):
     # Take timestamp for measurement
     measurement_time = datetime.datetime.now()
 
@@ -466,7 +460,7 @@ def measure_intan_impedance(rhx, groups, frequencies, impedance_temperature_cic)
     for file in filenames:
         os.remove(f"{directory}/data/temp/{file}.csv")
 
-def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
+def measure_intan_vt(rhx, groups, sample_frequency):
     # Counter to pause and reset every 5 channels - otherwise intan gets overwhelmed
     counter = 0
 
