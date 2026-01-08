@@ -1,6 +1,8 @@
 # To run lifetime testing: python run_lifetime_testing.py
 # To change interpreter: CTRL+SHIFT+P, Python: Select Interpreter, Python 3.12.4 ('base')
 
+# To pause lifetime testing, use pause_lifetime_testing.py
+
 import time
 import datetime
 import os
@@ -106,7 +108,7 @@ def main():
         - MUX: Keithley 7002 Switch System
         - Intan: Intan RHS 128 channel Stim/Record System
         - phidget: Phidget 4-input temperature sensor: https://www.phidgets.com/?prodid=1222&pcid=87
-        - rh-temp: Amphenol Advanced Sensors humidity/temperature sensor:https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire-/CC2D25-SIP/4732676
+        - rh-temp: Amphenol Advanced Sensors humidity/temperature sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire-/CC2D25-SIP/4732676
             note: it's not listed here as it doesn't have a software connection, but here's the link for the analog rh sensor: https://www.digikey.com/en/products/detail/amphenol-advanced-sensors-telaire/hs30p/4780893
         - Slack: instructions for replacing the webhook are in the README
         - Github: please don't change this path - this is referenced in a published paper
@@ -468,7 +470,7 @@ def measure_intan_vt(rhx, groups, sample_frequency, impedance_temperature_cic):
 
     now = datetime.datetime.now()
     now = now.strftime("%m/%d %H:%M:%S")
-    print(f'Starting VT tests at {now} (this takes ~30 minutes).')
+    print(f'Starting VT tests at {now} (this takes ~2 minutes per sample).')
 
     # Loop through each group for testing
     for group in groups:
@@ -946,7 +948,14 @@ def setup_folders_and_gitignore():
 
 def git_commit_and_push(repo_path):
     def run(cmd):
-        subprocess.run(cmd, cwd=repo_path, check=True)
+        # the DEVNULL statements stop the git output from printing
+        subprocess.run(
+            cmd, 
+            cwd=repo_path, 
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
     # Stage everything
     run(["git", "add", "."])
@@ -955,6 +964,7 @@ def git_commit_and_push(repo_path):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         run(["git", "commit", "-m", f"Auto data update {timestamp}"])
+        print(f"Committing data update to github as: Auto data update {timestamp}")
     except subprocess.CalledProcessError:
         # Happens when there is nothing to commit
         return

@@ -1,4 +1,10 @@
 # To pause lifetime testing: python pause_lifetime_testing.py
+# Use this script if you need to pause stim - stopping run_lifetime_testing.py will not stop stim, 
+# and manually stopping stim will not be logged, resulting in inaccurate data capture
+
+# If you need to move the setup or change the temperature, make the change while running 
+# run_lifetime_testing.py, or run this script immediately before and after the temperature change
+# starts and finishes to log accurate acceleration
 
 import os
 import json

@@ -30,7 +30,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 600.0,
+            "initial_i_max": 430.3469152173777,
             "temp_sensor_id": 2
         },
         "IR03": {
@@ -40,7 +40,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
+            "initial_i_max": 90.64375418286872,
             "temp_sensor_id": 2
         },
         "IR04": {
@@ -50,7 +50,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 46.99898115129879,
+            "initial_i_max": 76.50000000055181,
             "temp_sensor_id": 2
         },
         "IR05": {
@@ -60,7 +60,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 489.73951048949647,
+            "initial_i_max": 566.1467099167046,
             "temp_sensor_id": 2
         },
         "IR06": {
@@ -70,7 +70,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 42.02218934911247,
+            "initial_i_max": 42.01013762595233,
             "temp_sensor_id": 2
         },
         "IR07": {
@@ -90,7 +90,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 42.05881254667668,
+            "initial_i_max": 1200.0,
             "temp_sensor_id": 2
         },
         "IR09": {
@@ -100,7 +100,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
+            "initial_i_max": 1200.0,
             "temp_sensor_id": 2
         },
         "IR10": {
@@ -110,7 +110,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 74.4747252747258,
+            "initial_i_max": 98.74825174826717,
             "temp_sensor_id": 2
         }
     },
@@ -130,7 +130,7 @@
         "thermocouple_type": "J",
         "temp_offset": 5,
         "cadence_hrs": 24,
-        "last_test": "2026-1-7 5:06"
+        "last_test": "2026-1-7 17:42"
     },
     "slack_updates": {
         "cadence_accel_months": -1,
