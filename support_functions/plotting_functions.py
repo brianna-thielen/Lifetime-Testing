@@ -274,6 +274,7 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
     fig_z.update_yaxes(range=z_norm_plot_range, row=2, col=2)
 
     fig_z.write_html(f"{plot_path}/{title}.html")
+    print(f"{plot_path}/{title}.html")
 
     if plot_on:
         fig_z.show()

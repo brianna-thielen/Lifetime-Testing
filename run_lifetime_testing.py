@@ -117,6 +117,7 @@ def main():
 
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
+    rhx.set_display()
     setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
@@ -196,7 +197,8 @@ def main():
                 print(f'Finished testing at {now}')
 
             # Process data to generate plots and flag any issues
-            if len(intan_groups + lcr_groups + arduino_groups) > 0:
+            if True:
+            # if len(intan_groups + lcr_groups + arduino_groups) > 0:
                 process_all_data()
                 
                 # Push data to github
@@ -980,8 +982,7 @@ def write_heartbeat():
 
 if __name__ == '__main__':
     # Declare buffer size for reading from TCP command socket
-    # This is the maximum number of bytes expected for 1 read. 1024 is plenty
-    # for a single text command.
+    # This is the maximum number of bytes expected for 1 read. 1024 is plenty for a single text command.
     # Increase if many return commands are expected.
     COMMAND_BUFFER_SIZE = 1024
     try:
