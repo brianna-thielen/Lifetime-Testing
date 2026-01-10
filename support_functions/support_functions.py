@@ -82,9 +82,6 @@ def record_timestamp(stim_on, groups, group_info_path, equipment_info, data_path
 
             # Measure temperature for the given sample
             temperature_i = measure_temperature(sample, group_info, equipment_info)
-
-            # Calculate accelerated days
-            # accel_days = calculate_accel_days(real_days, temperature_i, df)
             
             # Check if it's a stim device, and create new row accordingly
             if "Pulsing On" in df.columns:
@@ -137,9 +134,6 @@ def record_impedance_data_to_summary(group, sample, measurement_time, impedance,
     real_days = measurement_time - first_day
     real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
 
-    # Calculate accelerated days
-    # accel_days = calculate_accel_days(real_days, temperature, df)
-
     # Check if it's a stim device, and create new row accordingly
     if "Pulsing On" in df.columns:
         new_row = pd.DataFrame({
@@ -186,9 +180,6 @@ def record_rh_data_to_summary(group, sample, measurement_time, rh, temperature, 
 
     real_days = measurement_time - first_day
     real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-    # Calculate accelerated days
-    # accel_days = calculate_accel_days(real_days, temperature, df)
 
     # Create a new row
     new_row = pd.DataFrame({
@@ -246,7 +237,7 @@ def calculate_accel_days(real_days, temperature):
     accel_days = [0]
 
     # First entry should be zero
-    if real_days['Real Days'].loc[0] != 0:
+    if real_days['Real Days'].loc[0] > 0.05:
         day_zero = pd.DataFrame({'Real Days': [0]})
         temp_zero = pd.DataFrame({'Temperature (C)': [temperature['Temperature (C)'].loc[0]]})
         real_days = pd.concat([day_zero, real_days], ignore_index=True)

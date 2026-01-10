@@ -91,7 +91,7 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
-            # Plot z and save to z_average, z_last
+            # Pull z and save to z_average, z_last
             z = df["Impedance Magnitude at 1000 Hz (ohms)"]
             z_last_numpy = z.iloc[-1]
             z_last.append(float(z_last_numpy))
@@ -101,8 +101,6 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             real_days = pd.DataFrame(real_days)
             accel_days = calculate_accel_days(real_days, temperature)
 
-            # if len(groups) == 1:
-                # z_last.append(float(z_last_numpy))
             if min_accel_days[g] > max(accel_days): # want to save the smallest of last accel days so we don't oversell progress
                 min_accel_days[g] = max(accel_days)
 
@@ -181,17 +179,17 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
 
         if norm:
             fig_z.add_trace(
-            go.Scatter(
-                x=accel_days, #This will take accelerated days from the last sample - need to update this later to account for different accel days between samples within a group
-                y=z_norm_average,
-                mode="lines",
-                line=dict(width=1, color=shade),
-                name=f"{group} Average",
-                showlegend=False
-            ),
-            row=2,
-            col=2,
-        )
+                go.Scatter(
+                    x=accel_days, #This will take accelerated days from the last sample - need to update this later to account for different accel days between samples within a group
+                    y=z_norm_average,
+                    mode="lines",
+                    line=dict(width=1, color=shade),
+                    name=f"{group} Average",
+                    showlegend=False
+                ),
+                row=2,
+                col=2,
+            )
         
         # Plot flagged dates
         flagged_dates_group = group_info["flagged_dates"]
@@ -575,7 +573,7 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
             df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
-            # Plot
+            # Pull data
             rh = df["Relative Humidity (%)"]
             temperature = df["Temperature (C)"]
             temperature = pd.DataFrame(temperature)

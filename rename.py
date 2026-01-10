@@ -9,8 +9,8 @@ def rename_files(directory, old_pattern, new_pattern):
             os.rename(os.path.join(directory, filename), os.path.join(directory, new_filename))
 
 if __name__ == "__main__":
-    directory = "./data/coatings/manual-measurements"  # Replace with your actual directory
-    old_pattern = "CV_0_"  # Replace with the text you want to replace
-    new_pattern = "CV_"  # Replace with the new text
+    directory = "C://Users//brian//Documents//GitHub//Lifetime-Testing//data//LCP IDEs 25um"  # Replace with your actual directory
+    old_pattern = "data_summary - Copy"  # Replace with the text you want to replace
+    new_pattern = "newdata_summary"  # Replace with the new text
 
     rename_files(directory, old_pattern, new_pattern)
