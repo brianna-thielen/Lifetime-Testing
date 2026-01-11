@@ -797,9 +797,6 @@ def perform_arduino_measurements(arduino_groups):
 
         # Sort data
         for sample_i in group_info["samples"]:
-            print(line)
-            print(sample_i)
-            print(line.index(sample_i))
             index_i = line.index(sample_i) + len(sample_i) + 2
 
             data = line[index_i:(index_i+15)]
