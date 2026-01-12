@@ -122,6 +122,9 @@ def main():
     # Setup data folders and gitignore
     setup_folders_and_gitignore()
 
+    # Setup counter for github failures
+    consecutive_failures = 0
+
     # Start testing loop
     run_test = True
     try:
@@ -198,7 +201,7 @@ def main():
                 process_all_data()
                 
                 # Push data to github
-                git_commit_and_push(EQUIPMENT_INFO["Github"]["path"])
+                consecutive_failures = git_commit_and_push(EQUIPMENT_INFO["Github"]["path"], consecutive_failures)
 
             # Write a heartbeat
             write_heartbeat()
@@ -933,7 +936,7 @@ def setup_folders_and_gitignore():
     
     IGNORE_PATH.write_text("\n".join(ignore_lines).rstrip() + "\n")
 
-def git_commit_and_push(repo_path):
+def git_commit_and_push(repo_path, consecutive_failures):
     print(f"Starting Github commit and push")
     def run(cmd):
         subprocess.run(cmd, cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
@@ -958,7 +961,16 @@ def git_commit_and_push(repo_path):
 
     except subprocess.CalledProcessError as e:
         print("Git operation failed: ", e)
-        notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Git operation failed: {e}")
+        consecutive_failures += 1
+
+        if consecutive_failures < 3:
+            print("Likely network error, no action needed")
+        else:
+            print(f"{consecutive_failures} consecutive failures, try restarting system")
+            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Git operation failed: {e}")
+            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"{consecutive_failures} consecutive failures, try restarting system")
+
+    return consecutive_failures
 
 def write_heartbeat():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
