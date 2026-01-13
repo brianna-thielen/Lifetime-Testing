@@ -504,13 +504,12 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, plot_norm=Fa
 
     # Exclude CIC outliers and find axis limits (extraneous outliers appeared when setup was moved)
     # first remove any instances of inf and any values <0
-    # all_cic = all_cic[np.isfinite(all_cic)]
-    # all_cic_norm = all_cic_norm[np.isfinite(all_cic_norm)]
-
-    all_cic = [item for item in all_cic if item < _CIC_UPPER_LIMIT]
-    all_cic_norm = [item for item in all_cic_norm if item < _CIC_NORM_UPPER_LIMIT]
-    all_cic = [item for item in all_cic if item >= 0]
-    all_cic_norm = [item for item in all_cic_norm if item >= 0]
+    all_cic = all_cic[np.isfinite(all_cic)]
+    all_cic = all_cic[all_cic < _CIC_UPPER_LIMIT]
+    all_cic = all_cic[all_cic >= 0]
+    all_cic_norm = all_cic_norm[np.isfinite(all_cic_norm)]
+    all_cic_norm = all_cic_norm[all_cic_norm < _CIC_NORM_UPPER_LIMIT]
+    all_cic_norm = all_cic_norm[all_cic_norm >= 0]
 
     mean_cic = statistics.median(all_cic)
     cic_upper = mean_cic * _CIC_MEAN_SCALAR
