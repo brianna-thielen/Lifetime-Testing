@@ -114,8 +114,8 @@ def main():
 
     # Initialize the Intan, setup stim, and start
     rhx, sample_frequency = initialize_intan()
-    # rhx.set_display()
-    # setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
+    rhx.set_display()
+    setup_all_stim_intan(rhx, True) #True triggers setting stim from json values (False disables stim)
     rhx.start_board()
     print('Starting stim.')
 
@@ -197,8 +197,7 @@ def main():
                 print(f'Finished testing at {now}')
 
             # Process data to generate plots and flag any issues
-            if True:
-            # if len(intan_groups + lcr_groups + arduino_groups) > 0:
+            if len(intan_groups + lcr_groups + arduino_groups) > 0:
                 process_all_data()
                 
                 # Push data to github
