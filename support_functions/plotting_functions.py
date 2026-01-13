@@ -10,10 +10,10 @@ import statistics
 
 from support_functions.support_functions import calculate_accel_days, calculate_accel_days_single
 
-_Z_MEAN_UPPER_SCALAR = 80
-_Z_MEAN_LOWER_SCALAR = 100
-_Z_NORM_MEAN_UPPER_SCALAR = 10
-_Z_NORM_MEAN_LOWER_SCALAR = 10
+_Z_MEAN_UPPER_SCALAR = 60
+_Z_MEAN_LOWER_SCALAR = 90
+_Z_NORM_MEAN_UPPER_SCALAR = 30
+_Z_NORM_MEAN_LOWER_SCALAR = 30
 _Z_PLOT_SCALAR = 1.6
 
 _CIC_MEAN_SCALAR = 30
@@ -245,10 +245,10 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, plot_norm=Fals
 
     # for normalized, look at upper and lower limits separately
     vals_over_one = all_z_norm[all_z_norm > 1]
-    z_norm_upper = vals_over_one.mean()*_Z_MEAN_UPPER_SCALAR if vals_over_one.size > 0 else 1.2
+    z_norm_upper = vals_over_one.mean()*_Z_NORM_MEAN_UPPER_SCALAR if vals_over_one.size > 0 else 1.2
 
     vals_under_one = all_z_norm[all_z_norm < 1]
-    z_norm_lower = vals_under_one.mean()/_Z_MEAN_LOWER_SCALAR if vals_under_one.size > 0 else 0.8
+    z_norm_lower = vals_under_one.mean()/_Z_NORM_MEAN_LOWER_SCALAR if vals_under_one.size > 0 else 0.8
 
     all_z_norm_filtered = all_z_norm[(all_z_norm >= z_norm_lower) & (all_z_norm <= z_norm_upper)]
 
