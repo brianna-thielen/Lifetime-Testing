@@ -11,10 +11,10 @@ import statistics
 from support_functions.support_functions import calculate_accel_days, calculate_accel_days_single
 
 _Z_MEAN_UPPER_SCALAR = 30
-_Z_MEAN_LOWER_SCALAR = 180
+_Z_MEAN_LOWER_SCALAR = 250
 _Z_NORM_MEAN_UPPER_SCALAR = 30
-_Z_NORM_MEAN_LOWER_SCALAR = 240
-_Z_PLOT_SCALAR = 3.2
+_Z_NORM_MEAN_LOWER_SCALAR = 350
+_Z_PLOT_SCALAR = 1.4
 
 _CIC_MEAN_SCALAR = 30
 _CIC_NORM_MEAN_SCALAR = 1.5
