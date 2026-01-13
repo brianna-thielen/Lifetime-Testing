@@ -1,6 +1,12 @@
 # Lifetime-Testing
 CV, EIS, and VT testing plus data analysis for accelerated lifetime testing
 
+Instructions for adding new samples:
+
+
+Instructions for removing samples from test:
+
+
 Instructions for setting up slack webhook:
 1. Go to https://api.slack.com/apps
 2. Click “Create New App” → From scratch.

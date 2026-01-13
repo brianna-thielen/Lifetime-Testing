@@ -273,6 +273,10 @@ def setup_all_stim_intan(rhx, stim_on):
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
+        # Ignore any groups where testing has concluded
+        if group_info["end_date"] is not None:
+            continue
+
         # Check if the group uses intan
         first_sample, first_params = next(iter(group_info["samples"].items()))
         if "pulse_amplitude" not in first_params:
@@ -838,17 +842,17 @@ def process_all_data():
             # For VT, plot CIC vs time
             if "VT" in test:
                 title = f"{group}: Charge Injection Capacity vs Time (1000 us pulse)"
-                cic_last, cic_norm_last, accel_days = plot_cic([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True)
+                cic_last, cic_norm_last, accel_days = plot_cic([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True, False)
 
             # For EIS, plot Z vs time
             elif "EIS" in test:
                 title = f"{group}: Impedance Magnitude vs Time"
-                z_last, z_norm_last, accel_days = plot_z([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True)
+                z_last, z_norm_last, accel_days = plot_z([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True, False)
 
             # For RH, plot RH vs time and Temp vs time:
             elif "RH" in test:
                 title = f"{group}: Relative Humidity vs Time"
-                rh_last, accel_days = plot_rh([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title)
+                rh_last, accel_days = plot_rh([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, False)
         
         # Look at all flags for the current group
         flags = group_info["flags"]

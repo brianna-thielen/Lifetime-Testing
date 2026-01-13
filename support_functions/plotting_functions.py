@@ -10,12 +10,17 @@ import statistics
 
 from support_functions.support_functions import calculate_accel_days, calculate_accel_days_single
 
-_Z_MEAN_SCALAR = 85
-_Z_NORM_MEAN_SCALAR = 10
+_Z_MEAN_UPPER_SCALAR = 80
+_Z_MEAN_LOWER_SCALAR = 100
+_Z_NORM_MEAN_UPPER_SCALAR = 10
+_Z_NORM_MEAN_LOWER_SCALAR = 10
 _Z_PLOT_SCALAR = 1.6
+
 _CIC_MEAN_SCALAR = 50
 _CIC_NORM_MEAN_SCALAR = 1.5
 _CIC_PLOT_SCALAR = 5
+_CIC_UPPER_LIMIT = 1e6
+_CIC_NORM_UPPER_LIMIT = 1e6
 
 # Base color options - add more if you ever want to plot more than 5 groups in one plot
 BASE_COLORS = [
@@ -29,13 +34,13 @@ BASE_COLORS = [
 # Plotting is off by default. Turn on for debugging.
 plot_on = False
 
-def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
+def plot_z(groups, data_path, sample_info_path, plot_path, title, plot_norm=False, plot_flags=False):
     # Save all Z data to later find plot limits
     all_z = np.array([])
     all_z_norm = np.array([])
 
     # If you're plotting normalized data, include second column
-    if norm:
+    if plot_norm:
         fig_z = make_subplots(
             rows=2,
             cols=2,
@@ -44,13 +49,14 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
                 "Individual Electrodes (normalized to t=0)",
                 "Average",
                 "Average (normalized to t=0)"
-            ),
-            x_title="Accelerated Time (days)",
-            y_title="Impedance Magnitude (ohms)"
+            )
         )
 
-        fig_z.update_yaxes(type="log", tick0=0, dtick=1, range=[-3, 3], row=1, col=2)
-        fig_z.update_yaxes(type="log", tick0=0, dtick=1, range=[-3, 3], row=2, col=2)
+        fig_z.update_yaxes(
+            title_text="Impedance Magnitude Change (|Z| / |Z|<sub>0</sub>)",
+            type="log", tick0=0, dtick=1, col=2,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
     else:
          fig_z = make_subplots(
             rows=2,
@@ -58,14 +64,23 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             subplot_titles=(
                 "Individual Electrodes"
                 "Average"
-            ),
-            x_title="Accelerated Time (days)",
-            y_title="Impedance Magnitude (ohms)"
+            )
         )
-
-    fig_z.update_layout(title_text=title)
-    fig_z.update_yaxes(type="log", tick0=100, dtick=1, range=[2, 8], row=1, col=1)
-    fig_z.update_yaxes(type="log", tick0=100, dtick=1, range=[2, 8], row=2, col=1)
+         
+    fig_z.update_layout(
+            title_text=title,
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
+    fig_z.update_xaxes(
+            title_text="Accelerated Time (days)",
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
+    fig_z.update_yaxes(
+            title_text="Impedance Magnitude (ohms)",
+            type="log", tick0=0, dtick=1, col=1,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
 
     # Loop through groups
     for g, group in enumerate(groups):
@@ -131,7 +146,7 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
                 z_average = [a + b for a, b in zip(z_average, z)]
 
             # Plot z_norm and save to z_norm_average, z_norm_last
-            if norm:
+            if plot_norm:
                 # Normalize impedance to t=0
                 z_norm = [r / z[0] for r in z]
                 z_norm_last.append(z_norm[-1])
@@ -159,7 +174,7 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
 
         # Once we're through all samples, calculate the average(s)
         z_average = [x / len(group_info["samples"]) for x in z_average]
-        if norm:
+        if plot_norm:
             z_norm_average = [x / len(group_info["samples"]) for x in z_norm_average]
 
         # Then plot them in the darkest color of the same color scale
@@ -177,7 +192,7 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             col=1,
         )
 
-        if norm:
+        if plot_norm:
             fig_z.add_trace(
                 go.Scatter(
                     x=accel_days, #This will take accelerated days from the last sample - need to update this later to account for different accel days between samples within a group
@@ -192,29 +207,30 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
             )
         
         # Plot flagged dates
-        flagged_dates_group = group_info["flagged_dates"]
-        # for flag_g, date_g in flagged_dates_group.items():
-        for flag_g, dates_g in flagged_dates_group.items():
-            # If there's only one date, put it in a list
-            if isinstance(dates_g, str):
-                dates_g = [dates_g]
+        if plot_flags:
+            flagged_dates_group = group_info["flagged_dates"]
+            # for flag_g, date_g in flagged_dates_group.items():
+            for flag_g, dates_g in flagged_dates_group.items():
+                # If there's only one date, put it in a list
+                if isinstance(dates_g, str):
+                    dates_g = [dates_g]
 
-            # Loop through each date in the flag
-            for date_g in dates_g:
-                # Convert to datetime
-                date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
+                # Loop through each date in the flag
+                for date_g in dates_g:
+                    # Convert to datetime
+                    date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
 
-                # Calculate real days
-                first_day = group_info["start_date"]
-                first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
+                    # Calculate real days
+                    first_day = group_info["start_date"]
+                    first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-                days = date_g - first_day
-                days = days.total_seconds() / 24 / 60 / 60 # convert to days
+                    days = date_g - first_day
+                    days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
-                # Calculate accelerated days
-                accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
+                    # Calculate accelerated days
+                    accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-                add_vert_line(fig_z, 2, 2, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shade, True)
+                    add_vert_line(fig_z, 2, 2, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shade, True)
 
     # Exclude Z outliers and find axis limits (extraneous outliers appeared when setup was moved)
     # first remove any instances of inf
@@ -222,17 +238,17 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
     all_z_norm = all_z_norm[np.isfinite(all_z_norm)]
 
     mean_z = statistics.median(all_z)
-    z_upper = mean_z * _Z_MEAN_SCALAR
-    z_lower = mean_z / _Z_MEAN_SCALAR
+    z_upper = mean_z * _Z_MEAN_UPPER_SCALAR
+    z_lower = mean_z / _Z_MEAN_LOWER_SCALAR
 
     all_z_filtered = all_z[(all_z >= z_lower) & (all_z <= z_upper)]
 
     # for normalized, look at upper and lower limits separately
     vals_over_one = all_z_norm[all_z_norm > 1]
-    z_norm_upper = vals_over_one.mean()*_Z_NORM_MEAN_SCALAR if vals_over_one.size > 0 else 1.2
+    z_norm_upper = vals_over_one.mean()*_Z_MEAN_UPPER_SCALAR if vals_over_one.size > 0 else 1.2
 
     vals_under_one = all_z_norm[all_z_norm < 1]
-    z_norm_lower = vals_under_one.mean()/_Z_NORM_MEAN_SCALAR if vals_under_one.size > 0 else 0.8
+    z_norm_lower = vals_under_one.mean()/_Z_MEAN_LOWER_SCALAR if vals_under_one.size > 0 else 0.8
 
     all_z_norm_filtered = all_z_norm[(all_z_norm >= z_norm_lower) & (all_z_norm <= z_norm_upper)]
 
@@ -283,13 +299,13 @@ def plot_z(groups, data_path, sample_info_path, plot_path, title, norm=False):
 
     return z_last, z_norm_last, min_accel_days
 
-def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
+def plot_cic(groups, data_path, sample_info_path, plot_path, title, plot_norm=False, plot_flags=False):
     # Save all CIC data to later find plot limits
     all_cic = np.array([])
     all_cic_norm = np.array([])
 
     # If you're plotting normalized data, include second column
-    if norm:
+    if plot_norm:
         fig_cic = make_subplots(
             rows=2,
             cols=2,
@@ -298,9 +314,13 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
                 "Individual Electrodes (normalized to t=0)",
                 "Average",
                 "Average (normalized to t=0)"
-            ),
-            x_title="Accelerated Time (days)",
-            y_title="Charge Injection Capacity @ 1000 us (uC/cm^2)"
+            )
+        )
+
+        fig_cic.update_yaxes(
+            title_text="Charge Injection Capacity Change (|CIC| / |CIC|<sub>0</sub>)",
+            col=2,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
         )
 
     else:
@@ -310,12 +330,23 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
             subplot_titles=(
                 "Individual Electrodes"
                 "Average"
-            ),
-            x_title="Accelerated Time (days)",
-            y_title="Charge Injection Capacity @ 1000 us (uC/cm^2)"
+            )
         )
 
-    fig_cic.update_layout(title_text=title)
+    fig_cic.update_layout(
+            title_text=title,
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
+    fig_cic.update_xaxes(
+            title_text="Accelerated Time (days)",
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
+    fig_cic.update_yaxes(
+            title_text="Impedance Magnitude (ohms)", 
+            col=1,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
 
     # Loop through groups
     for g, group in enumerate(groups):
@@ -381,7 +412,7 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
                 cic_average = [a + b for a, b in zip(cic_average, cic)]
 
             # Plot cic_norm and save to cic_norm_average, cic_norm_last
-            if norm:
+            if plot_norm:
                 # check if cic[0] is good
                 if cic[0] == 0:
                     continue
@@ -413,7 +444,7 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
         
         # Once we're through all samples, calculate the average(s)
         cic_average = [x / len(group_info["samples"]) for x in cic_average]
-        if norm:
+        if plot_norm:
             cic_norm_average = [x / len(group_info["samples"]) for x in cic_norm_average]
 
         # Then plot them in the darkest color of the same color scale
@@ -431,7 +462,7 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
             col=1,
         )
 
-        if norm:
+        if plot_norm:
             fig_cic.add_trace(
             go.Scatter(
                 x=accel_days, #This will take accelerated days from the last sample - need to update this later to account for different accel days between samples within a group
@@ -446,34 +477,40 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
         )
             
         # Plot flagged dates
-        flagged_dates_group = group_info["flagged_dates"]
-        # for flag_g, date_g in flagged_dates_group.items():
-        for flag_g, dates_g in flagged_dates_group.items():
-            # If there's only one date, put it in a list
-            if isinstance(dates_g, str):
-                dates_g = [dates_g]
+        if plot_flags:
+            flagged_dates_group = group_info["flagged_dates"]
+            # for flag_g, date_g in flagged_dates_group.items():
+            for flag_g, dates_g in flagged_dates_group.items():
+                # If there's only one date, put it in a list
+                if isinstance(dates_g, str):
+                    dates_g = [dates_g]
 
-            # Loop through each date in the flag
-            for date_g in dates_g:
-                # Convert to datetime
-                date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
+                # Loop through each date in the flag
+                for date_g in dates_g:
+                    # Convert to datetime
+                    date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
 
-                # Calculate real days
-                first_day = group_info["start_date"]
-                first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
+                    # Calculate real days
+                    first_day = group_info["start_date"]
+                    first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-                days = date_g - first_day
-                days = days.total_seconds() / 24 / 60 / 60 # convert to days
+                    days = date_g - first_day
+                    days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
-                # Calculate accelerated days
-                accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
+                    # Calculate accelerated days
+                    accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-                add_vert_line(fig_cic, 2, 2, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shade, True)
+                    add_vert_line(fig_cic, 2, 2, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shade, True)
 
     # Exclude CIC outliers and find axis limits (extraneous outliers appeared when setup was moved)
     # first remove any instances of inf and any values <0
-    all_cic = all_cic[np.isfinite(all_cic)]
-    all_cic_norm = all_cic_norm[np.isfinite(all_cic_norm)]
+    # all_cic = all_cic[np.isfinite(all_cic)]
+    # all_cic_norm = all_cic_norm[np.isfinite(all_cic_norm)]
+
+    all_cic = [item for item in all_cic if item < _CIC_UPPER_LIMIT]
+    all_cic_norm = [item for item in all_cic_norm if item < _CIC_NORM_UPPER_LIMIT]
+    all_cic = [item for item in all_cic if item >= 0]
+    all_cic_norm = [item for item in all_cic_norm if item >= 0]
 
     mean_cic = statistics.median(all_cic)
     cic_upper = mean_cic * _CIC_MEAN_SCALAR
@@ -537,17 +574,32 @@ def plot_cic(groups, data_path, sample_info_path, plot_path, title, norm=False):
 
     return cic_last, cic_norm_last, min_accel_days
 
-def plot_rh(groups, data_path, sample_info_path, plot_path, title):
+def plot_rh(groups, data_path, sample_info_path, plot_path, title, plot_flags=False):
     fig_rh = make_subplots(
         rows=2,
         cols=1,
         row_heights=[0.7, 0.3]
     )
 
-    fig_rh.update_layout(title_text=title)
-    fig_rh.update_xaxes(title_text="Accelerated Time (days)")
-    fig_rh.update_yaxes(title_text="Relative Humidity (%)", row=1, col=1)
-    fig_rh.update_yaxes(title_text="Temperature (C)", row=2, col=1)
+    fig_rh.update_layout(
+            title_text=title,
+            plot_bgcolor="white",
+            paper_bgcolor="white"
+        )
+    fig_rh.update_xaxes(
+            title_text="Accelerated Time (days)",
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
+    fig_rh.update_yaxes(
+            title_text="Relative Humidity (%)",
+            row=1,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
+    fig_rh.update_yaxes(
+            title_text="Temperature (C)",
+            row=2,
+            showline=True, linewidth=2, linecolor='black', ticks='outside', tickcolor='black',tickwidth=2, gridcolor='lightgrey'
+        )
 
     # Save all RH data and max temp to later find plot limits
     all_rh = np.array([])
@@ -622,28 +674,29 @@ def plot_rh(groups, data_path, sample_info_path, plot_path, title):
                 max_temp = max(temperature["Temperature (C)"])
         
             # Plot flagged dates
-            flagged_dates_group = group_info["flagged_dates"]
-            for flag_g, dates_g in flagged_dates_group.items():
-                # If there's only one date, put it in a list
-                if isinstance(dates_g, str):
-                    dates_g = [dates_g]
+            if plot_flags:
+                flagged_dates_group = group_info["flagged_dates"]
+                for flag_g, dates_g in flagged_dates_group.items():
+                    # If there's only one date, put it in a list
+                    if isinstance(dates_g, str):
+                        dates_g = [dates_g]
 
-                # Loop through each date in the flag
-                for date_g in dates_g:
-                    # Convert to datetime
-                    date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
+                    # Loop through each date in the flag
+                    for date_g in dates_g:
+                        # Convert to datetime
+                        date_g = datetime.datetime.strptime(date_g, "%Y-%m-%d %H:%M")
 
-                    # Calculate real days
-                    first_day = group_info["start_date"]
-                    first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
+                        # Calculate real days
+                        first_day = group_info["start_date"]
+                        first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
 
-                    days = date_g - first_day
-                    days = days.total_seconds() / 24 / 60 / 60 # convert to days
+                        days = date_g - first_day
+                        days = days.total_seconds() / 24 / 60 / 60 # convert to days
 
-                    # Calculate accelerated days
-                    accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
+                        # Calculate accelerated days
+                        accel_days_flag = calculate_accel_days_single(days, real_days, accel_days)
 
-                    add_vert_line(fig_rh, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shades[s], first_group)
+                        add_vert_line(fig_rh, 2, 1, accel_days_flag, f"{flag_g} ({sample} @ {round(accel_days_flag)} days)", shades[s], first_group)
 
             # After first group, we don't want to plot labels on vertical lines anymore
             first_group = False

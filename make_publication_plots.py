@@ -663,7 +663,10 @@ def plot_ide_good(groups, title, deltaz_range, t_range, bad_samples, vert_lines=
             # Save data to all_z for average and stddev calculation later
             if sample not in bad_samples:
                 z_temp = [r / z[0] for r in z]
-                z_temp = np.asarray(z_temp, dtype=float)
+
+                if sample == 'IDE-100-1':
+                    z_temp[103:133] = [float('nan')]*(133-103)
+
                 if t_ref is None:
                     t_ref = np.asarray(accel_days, dtype=float)
                     n_ref = len(t_ref)
