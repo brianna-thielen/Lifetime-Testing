@@ -17,3 +17,8 @@ Instructions for setting up slack webhook:
 7. Copy the Webhook URL — it’ll look like:
     https://hooks.slack.com/services/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
 8. Paste this into equipment.json under "Slack" / "webhook", replacing the existing webhook.
+
+
+Instructions for setting up arduino:
+- To replicate this setup, this will require some reverse engineering of the hardware that's currently used on the existing setup, as this isn't documented
+- The code that's used to program the arduino is saved under support_functions as i2c_RH_Temp_muxed2_fast.ino
