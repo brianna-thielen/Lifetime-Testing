@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 147.82507903056526,
+            "initial_i_max": 166.56923076917084,
             "temp_sensor_id": 2
         },
         "G1X1-2": {
@@ -29,7 +29,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 162.63911819887414,
+            "initial_i_max": 50.615384614953484,
             "temp_sensor_id": 2
         },
         "G3X3S-1": {
@@ -39,7 +39,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 346.446617238202,
+            "initial_i_max": 400.0,
             "temp_sensor_id": 2
         },
         "G3X3S-2": {
@@ -79,7 +79,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 161.3076923076912,
+            "initial_i_max": 274.9326923076827,
             "temp_sensor_id": 2
         },
         "G2X2L-2": {
@@ -89,7 +89,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0,
+            "initial_i_max": 288.00000000000074,
             "temp_sensor_id": 2
         }
     },
@@ -107,7 +107,7 @@
         "thermocouple_type": "J",
         "temp_offset": 5,
         "cadence_hrs": 12,
-        "last_test": "2026-1-20 21:28"
+        "last_test": "2026-1-21 09:28"
     },
     "slack_updates": {
         "cadence_accel_months": -1,
