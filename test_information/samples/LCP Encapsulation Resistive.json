@@ -53,7 +53,7 @@
         "temp_sensor_type": "rh-temp",
         "temp_offset": 0,
         "cadence_hrs": 12,
-        "last_test": "2026-1-21 09:28"
+        "last_test": "2026-1-21 21:28"
     },
     "slack_updates": {
         "cadence_accel_months": -1,
