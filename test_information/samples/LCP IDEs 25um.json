@@ -131,7 +131,7 @@
         "thermocouple_type": "J",
         "temp_offset": 3.5,
         "cadence_hrs": 12,
-        "last_test": "2026-1-27 09:52"
+        "last_test": "2026-1-27 21:52"
     },
     "slack_updates": {
         "cadence_accel_months": -1,
