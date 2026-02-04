@@ -398,6 +398,14 @@ def measure_intan_impedance(rhx, groups, frequencies):
         if not any("EIS-Intan" in test for test in group_info["test_info"]["tests"]):
             continue
 
+        # Measure temperature, looping through each sensor for the given group
+        sample_ids = list(group_info["samples"].keys())
+        temp_sensor_ids = group_info["temp_sensors"].keys()
+        temperature_i = []
+        for sensor_id in temp_sensor_ids:
+            temperature_i.append(measure_temperature(sample_ids, sensor_id, group_info, EQUIPMENT_INFO))
+        temperature_i = statistics.mean(temperature_i)
+
         # Pull group sample and channel info
         channels_g = [sample["intan_channel"] for sample in group_info["samples"].values()]
 
@@ -431,9 +439,6 @@ def measure_intan_impedance(rhx, groups, frequencies):
                 if round(freq_a) == 1000:
                     impedance_i_1k = impedance_i
                     phase_i_1k = phase_i
-
-                    # Measure temperature for the given sample
-                    temperature_i = measure_temperature(sample_i_cap, group_info, EQUIPMENT_INFO)
 
                     # If the sample is broken, change values to NaN
                     if sample_i in group_info["broken_devices"]:
@@ -584,6 +589,11 @@ def measure_intan_vt(rhx, groups, sample_frequency):
                 max_current = bestfit(0.6)
 
                 cic = max_current * (vt_pulse_width / 1000000) / (gsa_i / 100) # uA * s / cm^2
+
+                # If CIC is unreasonably high, set to NaN
+                if cic > 50000:
+                    max_current = 1
+                    cic = float('NaN')
             
             else:
                 max_current = 1
@@ -670,40 +680,47 @@ def perform_lcr_measurements(lcr_groups):
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
-            # Check for any broken samples
-            broken_samples = group_info["broken_devices"]
+        # Check for any broken samples
+        broken_samples = group_info["broken_devices"]
 
-            # Load test info
-            tests = group_info["test_info"]["tests"]
+        # Load test info
+        tests = group_info["test_info"]["tests"]
 
-            # Loop through each LCR test
-            for test in tests:
-                # Get test information
-                test_frequencies = TEST_INFO[test]["eis_frequencies"]
-                test_voltage = TEST_INFO[test]["eis_amplitude"]
+        # Measure temperature, looping through each sensor for the given group
+        sample_ids = list(group_info["samples"].keys())
+        temp_sensor_ids = group_info["temp_sensors"].keys()
+        temperature = []
+        for sensor_id in temp_sensor_ids:
+            temperature.append(measure_temperature(sample_ids, sensor_id, group_info, EQUIPMENT_INFO))
+        temperature = statistics.mean(temperature)
 
-                # Loop through each sample in the group
-                for sample in group_info["samples"]:
+        # Loop through each LCR test
+        for test in tests:
+            # Get test information
+            test_frequencies = TEST_INFO[test]["eis_frequencies"]
+            test_voltage = TEST_INFO[test]["eis_amplitude"]
 
-                    # If the sample is broken, skip it
-                    if sample in broken_samples:
-                        continue
+            # Loop through each sample in the group
+            for sample in sample_ids:
+                # If the sample is broken, skip it
+                if sample in broken_samples:
+                    continue
 
-                    # Pull relevant information from group info
-                    sample_info = group_info["samples"][sample]
-                    mux_channel_1 = sample_info["mux_channels"][0]
-                    mux_channel_2 = sample_info["mux_channels"][1]
+                # Pull relevant information from group info
+                sample_info = group_info["samples"][sample]
+                mux_channel_1 = sample_info["mux_channels"][0]
+                mux_channel_2 = sample_info["mux_channels"][1]
 
-                    # Close mux channels for the current sample
-                    mux.close_channels(mux_channel_1[0], [mux_channel_1[1]])
-                    mux.close_channels(mux_channel_2[0], [mux_channel_2[1]])
+                # Close mux channels for the current sample
+                mux.close_channels(mux_channel_1[0], [mux_channel_1[1]])
+                mux.close_channels(mux_channel_2[0], [mux_channel_2[1]])
 
-                    # Run LCR EIS and save data
-                    measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info)
+                # Run LCR EIS and save data
+                measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info, temperature)
 
-                    # Open mux channels
-                    mux.open_channels(mux_channel_1[0], [mux_channel_1[1]])
-                    mux.open_channels(mux_channel_2[0], [mux_channel_2[1]])
+                # Open mux channels
+                mux.open_channels(mux_channel_1[0], [mux_channel_1[1]])
+                mux.open_channels(mux_channel_2[0], [mux_channel_2[1]])
 
     # When measurements are done, set LCR back to 25 mV for safety, close connection
     lcx100.set_voltage(25.0 / 1000) # Set voltage back to 25 mV for safety
@@ -713,7 +730,7 @@ def perform_lcr_measurements(lcr_groups):
     mux.open_channels(1, [1])
     mux.close()
 
-def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info):
+def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage, group_info, temperature):
     counter = 0
     impedance_temperature = []
 
@@ -735,8 +752,6 @@ def measure_lcr_impedance(sample, group, lcx100, test_frequencies, test_voltage,
 
         # Measure impedance and temperature
         impedance, phase = lcx100.get_impedance()
-        
-        temperature = measure_temperature(sample, group_info, EQUIPMENT_INFO)
 
         # Save data to array
         impedance_temperature.append(
@@ -792,11 +807,6 @@ def perform_arduino_measurements(arduino_groups):
         ser = serial.Serial(port, baudrate, timeout=timeout_sec)
 
         # Wait for data
-        # try:
-        #     line = ser.readline().decode('utf-8').strip()
-
-        # finally:
-        #     ser.close()
         try:
             line = read_valid_line(ser)
         finally:
@@ -842,17 +852,17 @@ def process_all_data():
             # For VT, plot CIC vs time
             if "VT" in test:
                 title = f"{group}: Charge Injection Capacity vs Time (1000 us pulse)"
-                cic_last, cic_norm_last, accel_days = plot_cic([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True, False)
+                cic_last, cic_norm_last, accel_days = plot_cic(group, DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, False)
 
             # For EIS, plot Z vs time
             elif "EIS" in test:
                 title = f"{group}: Impedance Magnitude vs Time"
-                z_last, z_norm_last, accel_days = plot_z([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, True, False)
+                z_last, z_norm_last, accel_days = plot_z(group, DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, False)
 
             # For RH, plot RH vs time and Temp vs time:
             elif "RH" in test:
                 title = f"{group}: Relative Humidity vs Time"
-                rh_last, accel_days = plot_rh([group], DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, False)
+                rh_last, accel_days = plot_rh(group, DATA_PATH, SAMPLE_INFORMATION_PATH, PLOT_PATH, title, False)
         
         # Look at all flags for the current group
         flags = group_info["flags"]

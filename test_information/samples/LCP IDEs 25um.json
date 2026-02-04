@@ -23,8 +23,7 @@
                     1,
                     30
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-2": {
             "mux_channels": [
@@ -36,8 +35,7 @@
                     1,
                     40
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-3": {
             "mux_channels": [
@@ -49,8 +47,7 @@
                     1,
                     29
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-4": {
             "mux_channels": [
@@ -62,8 +59,7 @@
                     1,
                     39
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-5": {
             "mux_channels": [
@@ -75,8 +71,7 @@
                     1,
                     28
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-6": {
             "mux_channels": [
@@ -88,8 +83,7 @@
                     1,
                     38
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-7": {
             "mux_channels": [
@@ -101,8 +95,7 @@
                     1,
                     27
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         },
         "IDE-25-8": {
             "mux_channels": [
@@ -114,8 +107,7 @@
                     1,
                     37
                 ]
-            ],
-            "temp_sensor_id": 2
+            ]
         }
     },
     "broken_devices": [],
@@ -127,11 +119,16 @@
         "tests": [
             "EIS-LCR-25mv-3"
         ],
-        "temp_sensor_type": "phidget",
-        "thermocouple_type": "J",
-        "temp_offset": 3.5,
         "cadence_hrs": 12,
         "last_test": "2026-2-1 21:52"
+    },
+    "temp_sensors": {
+        "1": {
+            "type": "phidget",
+            "thermocouple_type": "J",
+            "id": 2,
+            "offset": 3.5
+        }
     },
     "slack_updates": {
         "cadence_accel_months": -1,

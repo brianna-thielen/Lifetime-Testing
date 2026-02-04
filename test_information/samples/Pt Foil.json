@@ -21,8 +21,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0,
-            "temp_sensor_id": 2
+            "initial_i_max": 0
         },
         "PT02": {
             "intan_channel": "d-009",
@@ -31,8 +30,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 197.63284319363697,
-            "temp_sensor_id": 2
+            "initial_i_max": 197.63284319363697
         },
         "PT03": {
             "intan_channel": "d-010",
@@ -41,8 +39,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
-            "temp_sensor_id": 2
+            "initial_i_max": 0.9
         },
         "PT04": {
             "intan_channel": "d-011",
@@ -51,8 +48,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 149.8011312217604,
-            "temp_sensor_id": 2
+            "initial_i_max": 149.8011312217604
         },
         "PT05": {
             "intan_channel": "d-005",
@@ -61,8 +57,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 170.08304552586532,
-            "temp_sensor_id": 2
+            "initial_i_max": 170.08304552586532
         },
         "PT06": {
             "intan_channel": "d-012",
@@ -71,8 +66,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 97.73141281029774,
-            "temp_sensor_id": 2
+            "initial_i_max": 97.73141281029774
         },
         "PT07": {
             "intan_channel": "d-013",
@@ -81,8 +75,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
-            "temp_sensor_id": 2
+            "initial_i_max": 0.9
         },
         "PT08": {
             "intan_channel": "d-014",
@@ -91,8 +84,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 600.0,
-            "temp_sensor_id": 2
+            "initial_i_max": 600.0
         },
         "PT09": {
             "intan_channel": "d-015",
@@ -101,8 +93,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 67.60764445027658,
-            "temp_sensor_id": 2
+            "initial_i_max": 67.60764445027658
         },
         "PT10": {
             "intan_channel": "d-004",
@@ -111,8 +102,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 72.00357640904933,
-            "temp_sensor_id": 2
+            "initial_i_max": 72.00357640904933
         }
     },
     "broken_devices": [
@@ -127,11 +117,16 @@
             "EIS-Intan-3",
             "VT-Intan"
         ],
-        "temp_sensor_type": "phidget",
-        "thermocouple_type": "J",
-        "temp_offset": 5,
         "cadence_hrs": 12,
         "last_test": "2026-1-7 17:42"
+    },
+    "temp_sensors": {
+        "1": {
+            "type": "phidget",
+            "thermocouple_type": "J",
+            "id": 2,
+            "offset": 5
+        }
     },
     "slack_updates": {
         "cadence_accel_months": -1,
