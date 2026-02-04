@@ -5,6 +5,7 @@ import json
 import serial
 import numpy as np
 import math
+import statistics
 import re
 from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
 
@@ -74,6 +75,14 @@ def record_timestamp(stim_on, groups, group_info_path, equipment_info, data_path
         with open(f"{group_info_path}/{group}.json", 'r') as f:
             group_info = json.load(f)
 
+        # Measure temperature, looping through each sensor for the given group
+        sample_ids = list(group_info["samples"].keys())
+        temp_sensor_ids = group_info["temp_sensors"].keys()
+        temperature_i = []
+        for sensor_id in temp_sensor_ids:
+            temperature_i.append(measure_temperature(sample_ids, sensor_id, group_info, equipment_info))
+        temperature_i = statistics.mean(temperature_i)
+
         # Find number of days since start
         first_day = group_info["start_date"]
         first_day = datetime.datetime.strptime(first_day, "%Y-%m-%d %H:%M")
@@ -87,8 +96,8 @@ def record_timestamp(stim_on, groups, group_info_path, equipment_info, data_path
             df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
-            # Measure temperature for the given sample
-            temperature_i = measure_temperature(sample, group_info, equipment_info)
+            # # Measure temperature for the given sample
+            # temperature_i = measure_temperature(sample, group_info, equipment_info)
             
             # Check if it's a stim device, and create new row accordingly
             if "Pulsing On" in df.columns:

@@ -371,7 +371,7 @@ def plot_electrode_data(fig, group, data_path, sample_info_path, plot_path, titl
 
     mask = np.isfinite(real_days) & np.isfinite(temperature)
     avg_temp = (
-        np.trapezoid(temperature[mask], x=real_days[mask])
+        np.trapz(temperature[mask], x=real_days[mask])
         / (real_days[mask].max() - real_days[mask].min())
     )
 
@@ -609,7 +609,7 @@ def plot_rh(group, data_path, sample_info_path, plot_path, title, plot_flags=Fal
 
     mask = np.isfinite(real_days) & np.isfinite(temperature)
     avg_temp = (
-        np.trapezoid(temperature[mask], x=real_days[mask])
+        np.trapz(temperature[mask], x=real_days[mask])
         / (real_days[mask].max() - real_days[mask].min())
     )
 
