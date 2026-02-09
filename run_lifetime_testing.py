@@ -1,7 +1,8 @@
 # To run lifetime testing: python run_lifetime_testing.py
 # To change interpreter: CTRL+SHIFT+P, Python: Select Interpreter, Python 3.12.4 ('base')
 
-# To pause lifetime testing, use pause_lifetime_testing.py
+# To pause lifetime testing, click ctrl-C 
+# OR, change the setting CONTINUOUS_TESTING below to allow stim to continue after ctrl-c and use pause_lifetime_testing.py
 
 # Various json files control all testing parameters and sample information:
 
@@ -94,6 +95,7 @@ from equipment.intan_rhs import IntanRHS as intan
 
 from support_functions.support_functions import measure_temperature, record_timestamp, record_impedance_data_to_summary, record_rh_data_to_summary
 from support_functions.plotting_functions import plot_cic, plot_z, plot_rh
+from pause_lifetime_testing import pause_testing
 
 SAMPLE_INFORMATION_PATH = './test_information/samples'
 EQUIPMENT_INFORMATION_PATH = './test_information/equipment.json'
@@ -101,6 +103,10 @@ TEST_INFORMATION_PATH = './test_information/tests.json'
 DATA_PATH = './data'
 PLOT_PATH = './data/Plots'
 IGNORE_PATH = Path('./.gitignore')
+
+# Set CONTINUOUS_TESTING to true to continue stim after stopping code (with ctrl-C, this only stops testing, but continues stim)
+# If you do this, you need to use pause_lifetime_testing.py to stop testing (this logs timestamps and stops stim)
+CONTINUOUS_TESTING = False
 
 # Import test, equipment, and plot information
 with open(TEST_INFORMATION_PATH, 'r') as f:
@@ -210,8 +216,16 @@ def main():
             time.sleep(60)
 
     except KeyboardInterrupt:
-        print("Automated test stopped, stimulation remains on.")
-        notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
+        # If CONTINUOUS_TESTING is true, continue stimulation but stop code
+        if CONTINUOUS_TESTING:
+            print("Automated test stopped, stimulation remains on.")
+            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
+
+        # If CONTINUOUS_TESTING is false, pause stim and record timestamps
+        else:
+            print("Automated test stopped, stopping stimulation.")
+            pause_testing(rhx)
+            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
 
 def initialize_intan():
     print('Connecting to Intan.')

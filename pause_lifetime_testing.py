@@ -27,12 +27,15 @@ with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
     EQUIPMENT_INFO = json.load(f)
 
 def main():
+    # Initialize the Intan
+    rhx, sample_frequency = initialize_intan()
+    
+    pause_testing()
+
+def pause_testing(rhx):
     """
     Pauses intan stimulation during lifetime testing
     """
-
-    # Initialize the Intan
-    rhx, sample_frequency = initialize_intan()
 
     # Turn off stim
     rhx.stop_board()
