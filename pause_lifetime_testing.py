@@ -30,6 +30,11 @@ def main():
     # Initialize the Intan
     rhx, sample_frequency = initialize_intan()
     
+    now = datetime.datetime.now()
+    now = now.strftime("%m/%d %H:%M:%S")
+
+    print(f"Automated test stopped at {now}, stopping stimulation.")
+
     pause_testing()
 
 def pause_testing(rhx):
@@ -39,7 +44,6 @@ def pause_testing(rhx):
 
     # Turn off stim
     rhx.stop_board()
-    print('Stopping stim.')
 
     # Find list of intan groups
     intan_groups = []

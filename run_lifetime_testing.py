@@ -1,8 +1,8 @@
 # To run lifetime testing: python run_lifetime_testing.py
 # To change interpreter: CTRL+SHIFT+P, Python: Select Interpreter, Python 3.12.4 ('base')
 
-# To pause lifetime testing, click ctrl-C 
-# OR, change the setting CONTINUOUS_TESTING below to allow stim to continue after ctrl-c and use pause_lifetime_testing.py
+# To pause lifetime testing, click ctrl-C (this will pause testing and stop stimulation)
+# OR, change the setting CONTINUOUS_TESTING below to allow stim to continue after ctrl-c, then use pause_lifetime_testing.py to stop stim and record timestamps
 
 # Various json files control all testing parameters and sample information:
 
@@ -223,7 +223,10 @@ def main():
 
         # If CONTINUOUS_TESTING is false, pause stim and record timestamps
         else:
-            print("Automated test stopped, stopping stimulation.")
+            now = datetime.datetime.now()
+            now = now.strftime("%m/%d %H:%M:%S")
+
+            print(f"Automated test stopped at {now}, stopping stimulation.")
             pause_testing(rhx)
             notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
 
