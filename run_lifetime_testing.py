@@ -813,6 +813,14 @@ def perform_arduino_measurements(arduino_groups):
         if "RH-Arduino" not in group_info["test_info"]["tests"]:
             continue
 
+        # Measure temperature, looping through each sensor for the given group
+        sample_ids = list(group_info["samples"].keys())
+        temp_sensor_ids = group_info["temp_sensors"].keys()
+        temperature_i = []
+        for sensor_id in temp_sensor_ids:
+            temperature_i.append(measure_temperature(sample_ids, sensor_id, group_info, EQUIPMENT_INFO))
+        temperature_i = statistics.mean(temperature_i)
+
         # Setup serial connection
         port = group_info["test_info"]["arduino_port"]
         baudrate = group_info["test_info"]["arduino_baudrate"]
@@ -835,10 +843,10 @@ def perform_arduino_measurements(arduino_groups):
             temp_index = data.index("T=") + 2
 
             rh = float(data[rh_index:(temp_index-3)])
-            temperature = float(data[temp_index:])
+            # temperature = float(data[temp_index:])
 
             # Save data to summary
-            record_rh_data_to_summary(group, sample_i, measurement_time, rh, temperature, DATA_PATH, group_info)
+            record_rh_data_to_summary(group, sample_i, measurement_time, rh, temperature_i, DATA_PATH, group_info)
 
 def read_valid_line(ser):
     while True:
