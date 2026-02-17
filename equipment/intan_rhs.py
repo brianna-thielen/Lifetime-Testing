@@ -300,6 +300,15 @@ class IntanRHS:
 
         return filename, actual_frequency
     
+    def set_display(self):
+        # Set filter display 1 to DC waveforms
+        self.scommand.sendall(b'set filterdisplay1 dc')
+        time.sleep(1)
+
+        # Set time scale to 40 ms
+        self.scommand.sendall(b'set timescalemilliseconds 40')
+        time.sleep(1)
+    
 
 def readUint32(array, arrayIndex):
     """Reads 4 bytes from array as unsigned 32-bit integer.

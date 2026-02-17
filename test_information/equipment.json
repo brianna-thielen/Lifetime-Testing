@@ -22,5 +22,8 @@
     },
     "Slack": {
         "webhook": "https://hooks.slack.com/services/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"
+    },
+    "Github": {
+        "path": "C:/Users/3DPrint-Integral/src/Lifetime-Testing/Lifetime-Testing"
     }
 }

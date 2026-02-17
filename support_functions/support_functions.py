@@ -5,18 +5,20 @@ import json
 import serial
 import numpy as np
 import math
+import statistics
+import re
 from equipment.phidget_4input_temperature import Phidget22TemperatureSensor as phidget
 
-def measure_temperature(sample, group_info, equipment_info):
+def measure_temperature(sample_ids, sensor_id, group_info, equipment_info):
     # Get sensor and equipment information
-    sensor_type = group_info["test_info"]["temp_sensor_type"]
-    sensor_channel = group_info["samples"][sample.upper()]["temp_sensor_id"]
+    sensor_type = group_info["temp_sensors"][sensor_id]["type"]
+    sensor_channel = group_info["temp_sensors"][sensor_id]["id"]
     delay = equipment_info[sensor_type]["delay"]
-    offset = group_info["test_info"]["temp_offset"]
+    offset = group_info["temp_sensors"][sensor_id]["offset"]
 
     # Measure temperature
     if sensor_type == "phidget":
-        thermocouple_type = group_info["test_info"]["thermocouple_type"]
+        thermocouple_type = group_info["temp_sensors"][sensor_id]["thermocouple_type"]
 
         temp_sensor = phidget(sensor_channel)
         temp_sensor.open_connection()
@@ -26,6 +28,11 @@ def measure_temperature(sample, group_info, equipment_info):
         time.sleep(delay)
         temp_sensor.close()
         time.sleep(delay)
+
+        # Filter extreme outliers
+        if temperature < 5 or temperature > 95:
+            temperature = float("NaN")
+
     elif sensor_type == "rh-temp":
         # Setup serial connection
         port = group_info["test_info"]["arduino_port"]
@@ -45,15 +52,16 @@ def measure_temperature(sample, group_info, equipment_info):
         finally:
             ser.close()
 
-        # Find temperature
-        # To use the measurement from the cap sensor in the same vial, replace the "R" in sample with "C"
-        sample_i = sample.replace('-R-', '-C-')
-        index_i = line.index(sample_i) + len(sample_i) + 2
-
-        data = line[index_i:(index_i+15)]
-        temp_index = data.index("T=") + 2
-
-        temperature = float(data[temp_index:])
+        # Find average temperature from all good readings
+        temps = []
+        for sample in sample_ids:
+            match = re.search(rf"{re.escape(sample)}:.*?T=([\d.]+)", line)
+            if match:
+                t = float(match.group(1))
+                # Filter extreme outliers
+                if t > 5 and t < 95:
+                    temps.append(t)
+        temperature = np.mean(temps)
     else:
         temperature = float("NaN")
 
@@ -66,6 +74,14 @@ def record_timestamp(stim_on, groups, group_info_path, equipment_info, data_path
     for group in groups:
         with open(f"{group_info_path}/{group}.json", 'r') as f:
             group_info = json.load(f)
+
+        # Measure temperature, looping through each sensor for the given group
+        sample_ids = list(group_info["samples"].keys())
+        temp_sensor_ids = group_info["temp_sensors"].keys()
+        temperature_i = []
+        for sensor_id in temp_sensor_ids:
+            temperature_i.append(measure_temperature(sample_ids, sensor_id, group_info, equipment_info))
+        temperature_i = statistics.mean(temperature_i)
 
         # Find number of days since start
         first_day = group_info["start_date"]
@@ -80,11 +96,8 @@ def record_timestamp(stim_on, groups, group_info_path, equipment_info, data_path
             df = pd.read_csv(f"{data_path}/{group}/{sample}_data_summary.csv")
             df = df.drop(columns=["Unnamed: 0"], axis=1)
 
-            # Measure temperature for the given sample
-            temperature_i = measure_temperature(sample, group_info, equipment_info)
-
-            # Calculate accelerated days
-            # accel_days = calculate_accel_days(real_days, temperature_i, df)
+            # # Measure temperature for the given sample
+            # temperature_i = measure_temperature(sample, group_info, equipment_info)
             
             # Check if it's a stim device, and create new row accordingly
             if "Pulsing On" in df.columns:
@@ -137,9 +150,6 @@ def record_impedance_data_to_summary(group, sample, measurement_time, impedance,
     real_days = measurement_time - first_day
     real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
 
-    # Calculate accelerated days
-    # accel_days = calculate_accel_days(real_days, temperature, df)
-
     # Check if it's a stim device, and create new row accordingly
     if "Pulsing On" in df.columns:
         new_row = pd.DataFrame({
@@ -186,9 +196,6 @@ def record_rh_data_to_summary(group, sample, measurement_time, rh, temperature, 
 
     real_days = measurement_time - first_day
     real_days = real_days.total_seconds() / 24 / 60 / 60 # convert to days
-
-    # Calculate accelerated days
-    # accel_days = calculate_accel_days(real_days, temperature, df)
 
     # Create a new row
     new_row = pd.DataFrame({
@@ -246,7 +253,7 @@ def calculate_accel_days(real_days, temperature):
     accel_days = [0]
 
     # First entry should be zero
-    if real_days['Real Days'].loc[0] != 0:
+    if real_days['Real Days'].loc[0] > 0.05:
         day_zero = pd.DataFrame({'Real Days': [0]})
         temp_zero = pd.DataFrame({'Temperature (C)': [temperature['Temperature (C)'].loc[0]]})
         real_days = pd.concat([day_zero, real_days], ignore_index=True)

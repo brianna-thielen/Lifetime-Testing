@@ -1,13 +1,15 @@
 {
     "start_date": "2024-11-4 15:25",
+    "end_date": null,
     "flagged_dates": {
         "switched to automated testing": "2024-12-9 14:39",
-        "moved setup to BT apt": "2025-11-03 18:30"
+        "power outage": [
+            "2025-11-03 16:30",
+            "2025-12-20 14:31"
+        ]
     },
     "samples": {
-        "Ambient": {
-            "temp_sensor_id": -1
-        }
+        "Ambient": {}
     },
     "broken_devices": [],
     "flags": {
@@ -17,15 +19,21 @@
         "tests": [
             "RH-Arduino"
         ],
-        "temp_sensor_type": "rh-temp",
-        "temp_offset": 0,
         "arduino_port": "COM4",
         "arduino_baudrate": 9600,
-        "cadence_hrs": 12,
-        "last_test": "2025-12-14 11:50"
+        "cadence_hrs": 24,
+        "last_test": "2026-2-17 10:35"
+    },
+    "temp_sensors": {
+        "1": {
+            "type": "rh-temp",
+            "id": -1,
+            "offset": 0
+        }
     },
     "slack_updates": {
-        "cadence_accel_months": 12,
+        "cadence_accel_months": -1,
         "last_update_accel_months": 36
-    }
+    },
+    "github_upload": true
 }

@@ -1,10 +1,17 @@
 {
     "start_date": "2024-11-7 7:43",
+    "end_date": "2026-1-12 04:17",
     "flagged_dates": {
         "switched to automated testing": "2024-12-13 18:17",
         "increased stimulation 3x on samples 3/4/8/9": "2025-1-10 11:16",
-        "replaced PBS": "2025-3-27 17:50",
-        "moved setup to BT apt and replaced PBS": "2025-11-03 18:30"
+        "replaced PBS": [
+            "2025-3-27 17:50",
+            "2025-11-03 18:30"
+        ],
+        "power outage": [
+            "2025-11-03 16:30",
+            "2025-12-20 14:31"
+        ]
     },
     "samples": {
         "IR01": {
@@ -14,8 +21,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 600.0,
-            "temp_sensor_id": 2
+            "initial_i_max": 76.49999999999413
         },
         "IR02": {
             "intan_channel": "d-025",
@@ -24,8 +30,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 95.19230769231696,
-            "temp_sensor_id": 2
+            "initial_i_max": 430.3469152173777
         },
         "IR03": {
             "intan_channel": "d-026",
@@ -34,8 +39,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0.9,
-            "temp_sensor_id": 2
+            "initial_i_max": 90.64375418286872
         },
         "IR04": {
             "intan_channel": "d-027",
@@ -44,8 +48,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 1800.0,
-            "temp_sensor_id": 2
+            "initial_i_max": 76.50000000055181
         },
         "IR05": {
             "intan_channel": "d-007",
@@ -54,8 +57,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 552.392307692376,
-            "temp_sensor_id": 2
+            "initial_i_max": 566.1467099167046
         },
         "IR06": {
             "intan_channel": "d-028",
@@ -64,8 +66,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 42.05881254667668,
-            "temp_sensor_id": 2
+            "initial_i_max": 42.01013762595233
         },
         "IR07": {
             "intan_channel": "d-029",
@@ -74,8 +75,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 0,
-            "temp_sensor_id": 2
+            "initial_i_max": 0
         },
         "IR08": {
             "intan_channel": "d-030",
@@ -84,8 +84,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 42.01013762595233,
-            "temp_sensor_id": 2
+            "initial_i_max": 1200.0
         },
         "IR09": {
             "intan_channel": "d-031",
@@ -94,8 +93,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 42.01013762595233,
-            "temp_sensor_id": 2
+            "initial_i_max": 1200.0
         },
         "IR10": {
             "intan_channel": "d-006",
@@ -104,8 +102,7 @@
             "pulse_width": 0,
             "pulse_interphase": 0,
             "pulse_frequency": 0,
-            "initial_i_max": 71.46571438717366,
-            "temp_sensor_id": 2
+            "initial_i_max": 98.74825174826717
         }
     },
     "broken_devices": [
@@ -120,14 +117,20 @@
             "EIS-Intan-3",
             "VT-Intan"
         ],
-        "temp_sensor_type": "phidget",
-        "thermocouple_type": "J",
-        "temp_offset": 5,
-        "cadence_hrs": 24,
-        "last_test": "2025-12-13 23:05"
+        "cadence_hrs": 12,
+        "last_test": "2026-1-7 17:42"
+    },
+    "temp_sensors": {
+        "1": {
+            "type": "phidget",
+            "thermocouple_type": "J",
+            "id": 2,
+            "offset": 5
+        }
     },
     "slack_updates": {
-        "cadence_accel_months": 12,
+        "cadence_accel_months": -1,
         "last_update_accel_months": 89.5
-    }
+    },
+    "github_upload": true
 }
