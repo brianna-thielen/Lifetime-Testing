@@ -64,5 +64,6 @@ Instructions for setting up Github upload:
     {
         "path": "C:/Repo-Directory"
     }
+3. If push fails, ensure you're logged in by testing a push on the command line
 
 Note: slack.json and github.json are automatically added to .gitignore for privacy
