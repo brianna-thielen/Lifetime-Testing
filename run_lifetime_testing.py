@@ -115,6 +115,20 @@ with open(TEST_INFORMATION_PATH, 'r') as f:
 with open(EQUIPMENT_INFORMATION_PATH, 'r') as f:
     EQUIPMENT_INFO = json.load(f)
 
+# Import slack webhook
+# This is saved in a file called "slack.json" in the "test_information" folder, under the key "webhook"
+# This is included in the gitignore so that slack doesn't invalidate the webhook
+with open('./test_information/slack.json') as f:
+    SLACK_WEBHOOK = json.load(f)
+    SLACK_WEBHOOK = SLACK_WEBHOOK["webhook"]
+
+# Import github folder
+# This is saved in a file called "github.json" in the "test_information" folder, under the key "path"
+# This is included in the gitignore for privacy
+with open('./test_information/github.json') as f:
+    GITHUB_FOLDER = json.load(f)
+    GITHUB_FOLDER = GITHUB_FOLDER["path"]
+
 def main():
     # Starts automated lifetime testing
 
@@ -207,7 +221,7 @@ def main():
                 process_all_data()
                 
                 # Push data to github
-                consecutive_failures = git_commit_and_push(EQUIPMENT_INFO["Github"]["path"], consecutive_failures)
+                consecutive_failures = git_commit_and_push(GITHUB_FOLDER, consecutive_failures)
 
             # Write a heartbeat
             write_heartbeat()
@@ -219,7 +233,7 @@ def main():
         # If CONTINUOUS_TESTING is true, continue stimulation but stop code
         if CONTINUOUS_TESTING:
             print("Automated test stopped, stimulation remains on.")
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
+            notify_slack(SLACK_WEBHOOK, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
 
         # If CONTINUOUS_TESTING is false, pause stim and record timestamps
         else:
@@ -228,7 +242,7 @@ def main():
 
             print(f"Automated test stopped at {now}, stopping stimulation.")
             pause_testing(rhx)
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
+            notify_slack(SLACK_WEBHOOK, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
 
 def initialize_intan():
     print('Connecting to Intan.')
@@ -854,7 +868,6 @@ def perform_arduino_measurements(arduino_groups):
 def read_valid_line(ser):
     while True:
         line = ser.readline().decode('utf-8', errors='ignore').strip()
-        print(f'line check: {line}')
         if line.startswith("mins"):
             return line
         # otherwise keep looping
@@ -927,7 +940,7 @@ def process_all_data():
         time_elapsed = current_test - float(last_update)
 
         if time_elapsed > update_cadence and update_cadence > 0:
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], summary)
+            notify_slack(SLACK_WEBHOOK, summary)
             print(summary)
 
             # Update group info
@@ -946,6 +959,12 @@ def setup_folders_and_gitignore():
         "# Auto-generated .gitignore",
         "# Do not edit manually\n"
     ]
+
+    # Add github information
+    ignore_lines.append("test_information/github.json")
+
+    # Add slack information
+    ignore_lines.append("test_information/slack.json")
 
     # Loop through all groups
     for group in os.listdir(SAMPLE_INFORMATION_PATH):
@@ -1006,8 +1025,8 @@ def git_commit_and_push(repo_path, consecutive_failures):
             print("Likely network error, no action needed")
         else:
             print(f"{consecutive_failures} consecutive failures, try restarting system")
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"Git operation failed: {e}")
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], f"{consecutive_failures} consecutive failures, try restarting system")
+            notify_slack(SLACK_WEBHOOK, f"Git operation failed: {e}")
+            notify_slack(SLACK_WEBHOOK, f"{consecutive_failures} consecutive failures, try restarting system")
 
     return consecutive_failures
 
@@ -1027,6 +1046,6 @@ if __name__ == '__main__':
         error_msg = f"Lifetime testing script crashed at {datetime.datetime.now()}:\n{traceback.format_exc()}"
 
         if "KeyboardInterrupt" not in error_msg:
-            notify_slack(EQUIPMENT_INFO["Slack"]["webhook"], error_msg)
+            notify_slack(SLACK_WEBHOOK, error_msg)
 
         print(error_msg)        

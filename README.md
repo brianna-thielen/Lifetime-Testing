@@ -51,6 +51,18 @@ Instructions for setting up slack webhook:
 4. Go to “Incoming Webhooks” in the left menu.
 5. Toggle Activate Incoming Webhooks to ON.
 6. Click “Add New Webhook to Workspace” and select the desired channel.
-7. Copy the Webhook URL — it’ll look like:
-    https://hooks.slack.com/services/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
-8. Paste this into equipment.json under "Slack" / "webhook", replacing the existing webhook.
+7. Copy the Webhook URL, and save it into a new file under test_information/slack.json, with the key "webhook" (example below)
+    slack.json:
+    {
+        "webhook": "[webhook url]"
+    }
+
+Instructions for setting up Github upload:
+1. Sync the Github repository to your computer
+2. Save the directory under test_information/github.json, with the key "path" (example below)
+    github.json:
+    {
+        "path": "C:/Repo-Directory"
+    }
+
+Note: slack.json and github.json are automatically added to .gitignore for privacy
