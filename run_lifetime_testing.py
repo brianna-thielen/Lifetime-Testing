@@ -218,7 +218,7 @@ def main():
 
             # Process data to generate plots and flag any issues
             if len(intan_groups + lcr_groups + arduino_groups) > 0:
-                process_all_data()
+                process_all_data(intan_groups + lcr_groups + arduino_groups)
                 
                 # Push data to github
                 consecutive_failures = git_commit_and_push(GITHUB_FOLDER, consecutive_failures)
@@ -872,14 +872,10 @@ def read_valid_line(ser):
             return line
         # otherwise keep looping
 
-def process_all_data():
+def process_all_data(groups):
     # Loop through each group
-    for group in os.listdir(DATA_PATH):
+    for group in groups:
         flagged_samples_group = ""
-
-        # Skip Plots and temp folders
-        if "Plots" in group or "temp" in group or "Archive" in group:
-            continue
 
         # Load group info
         with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'r') as f:
