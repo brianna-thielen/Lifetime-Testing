@@ -449,6 +449,7 @@ def plot_electrode_data(fig, group, data_path, sample_info_path, plot_path, titl
     # remove colon from title to produce filename
     file_title = title.replace(":", "")
     fig.write_html(f"{plot_path}/{file_title}.html")
+    fig.write_image(f"{plot_path}/{file_title}.png", width=2544, height=1289)
 
     if plot_on:
         fig.show()
@@ -670,6 +671,7 @@ def plot_rh(group, data_path, sample_info_path, plot_path, title, plot_flags=Fal
     # remove colon from title to produce filename
     file_title = title.replace(":", "")
     fig_rh.write_html(f"{plot_path}/{file_title}.html")
+    fig_rh.write_image(f"{plot_path}/{file_title}.png", width=2544, height=1289)
 
     if plot_on:
         fig_rh.show()

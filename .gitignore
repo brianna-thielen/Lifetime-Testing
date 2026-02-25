@@ -1,2 +1,5 @@
 # Auto-generated .gitignore
 # Do not edit manually
+
+test_information/github.json
+test_information/slack.json
