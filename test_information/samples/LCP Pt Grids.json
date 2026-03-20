@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 184.73029827315236
+            "initial_i_max": 167.50032594525143
         },
         "G1X1-2": {
             "intan_channel": "d-022",
@@ -28,7 +28,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 256.7928994082843
         },
         "G3X3S-1": {
             "intan_channel": "d-021",
@@ -37,7 +37,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 348.5852307692777
+            "initial_i_max": 400.0
         },
         "G3X3S-2": {
             "intan_channel": "d-020",
@@ -55,7 +55,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 395.577216676468
         },
         "G2X2S-2": {
             "intan_channel": "d-018",
@@ -64,7 +64,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 146.81308977249768
+            "initial_i_max": 118.68440361421484
         },
         "G2X2L-1": {
             "intan_channel": "d-017",
@@ -73,7 +73,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 357.78461538462807
         },
         "G2X2L-2": {
             "intan_channel": "d-016",
@@ -82,7 +82,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 383.53846153851583
         }
     },
     "broken_devices": [],
@@ -96,7 +96,7 @@
             "VT-Intan"
         ],
         "cadence_hrs": 24,
-        "last_test": "2026-3-18 19:31"
+        "last_test": "2026-3-19 21:07"
     },
     "temp_sensors": {
         "1": {
