@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 215.04494902682
+            "initial_i_max": 213.2432208079731
         },
         "G1X1-2": {
             "intan_channel": "d-022",
@@ -28,7 +28,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 213.351262477994
+            "initial_i_max": 204.21346153847503
         },
         "G3X3S-1": {
             "intan_channel": "d-021",
@@ -37,7 +37,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 378.32579185521956
         },
         "G3X3S-2": {
             "intan_channel": "d-020",
@@ -55,7 +55,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 349.44682274245906
+            "initial_i_max": 327.6396359365871
         },
         "G2X2S-2": {
             "intan_channel": "d-018",
@@ -64,7 +64,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 126.98118428335924
+            "initial_i_max": 146.20113122173987
         },
         "G2X2L-1": {
             "intan_channel": "d-017",
@@ -73,7 +73,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 267.7565797838518
+            "initial_i_max": 313.64861538465
         },
         "G2X2L-2": {
             "intan_channel": "d-016",
@@ -82,7 +82,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 387.85430769233153
+            "initial_i_max": 360.2385542168876
         }
     },
     "broken_devices": [],
@@ -96,7 +96,7 @@
             "VT-Intan"
         ],
         "cadence_hrs": 24,
-        "last_test": "2026-3-20 21:07"
+        "last_test": "2026-3-21 21:07"
     },
     "temp_sensors": {
         "1": {
