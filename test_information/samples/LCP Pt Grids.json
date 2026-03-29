@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 180.74296435273004
+            "initial_i_max": 180.4801488834033
         },
         "G1X1-2": {
             "intan_channel": "d-022",
@@ -28,7 +28,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 351.5465587041568
+            "initial_i_max": 294.23411545998266
         },
         "G3X3S-1": {
             "intan_channel": "d-021",
@@ -37,7 +37,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 395.2669683258209
         },
         "G3X3S-2": {
             "intan_channel": "d-020",
@@ -55,7 +55,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 146.5194679169165
+            "initial_i_max": 253.7307692307734
         },
         "G2X2S-2": {
             "intan_channel": "d-018",
@@ -64,7 +64,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 89.99104025179813
+            "initial_i_max": 115.96153846156265
         },
         "G2X2L-1": {
             "intan_channel": "d-017",
@@ -73,7 +73,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 177.56565295172916
+            "initial_i_max": 246.5307692308032
         },
         "G2X2L-2": {
             "intan_channel": "d-016",
@@ -82,7 +82,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 220.8482677628112
+            "initial_i_max": 222.15164835166496
         }
     },
     "broken_devices": [],
@@ -96,7 +96,7 @@
             "VT-Intan"
         ],
         "cadence_hrs": 24,
-        "last_test": "2026-3-27 21:07"
+        "last_test": "2026-3-28 21:07"
     },
     "temp_sensors": {
         "1": {
