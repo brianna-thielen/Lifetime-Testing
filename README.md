@@ -1,6 +1,8 @@
 # Lifetime-Testing
 Electrode testing (EIS and VT), IDE testing (EIS), and humidity sensor monitoring (I2C and resistive) plus data analysis for accelerated lifetime testing
 
+Note: Automatic Windows update is disabled on this machine to prevent unwanted restarts. Check for updates periodically.
+
 Instructions for starting testing:
 1. Ensure all hardware is connected and turned on
 2. Open Visual Studio Code to Lifetime-Testing repository
