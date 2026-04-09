@@ -122,6 +122,15 @@ with open('./test_information/slack.json') as f:
     SLACK_WEBHOOK = json.load(f)
     SLACK_WEBHOOK = SLACK_WEBHOOK["webhook"]
 
+# Import discord webhook
+# This is saved in a file called "discord.json" in the "test_information" folder, under the key "webhook"
+# This is included in the gitignore so that slack doesn't invalidate the webhook
+with open('./test_information/discord.json') as f:
+    DISCORD_WEBHOOK = json.load(f)
+    DISCORD_WEBHOOK = DISCORD_WEBHOOK["webhook"]
+
+WEBHOOKS = {SLACK_WEBHOOK, DISCORD_WEBHOOK}
+
 # Import github folder
 # This is saved in a file called "github.json" in the "test_information" folder, under the key "path"
 # This is included in the gitignore for privacy
@@ -233,7 +242,7 @@ def main():
         # If CONTINUOUS_TESTING is true, continue stimulation but stop code
         if CONTINUOUS_TESTING:
             print("Automated test stopped, stimulation remains on.")
-            notify_slack(SLACK_WEBHOOK, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
+            notify_channels(WEBHOOKS, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation remains on.")
 
         # If CONTINUOUS_TESTING is false, pause stim and record timestamps
         else:
@@ -242,7 +251,7 @@ def main():
 
             print(f"Automated test stopped at {now}, stopping stimulation.")
             pause_testing(rhx)
-            notify_slack(SLACK_WEBHOOK, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
+            notify_channels(WEBHOOKS, f"Automated test stopped at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. Stimulation turned off.")
 
 def initialize_intan():
     print('Connecting to Intan.')
@@ -936,7 +945,7 @@ def process_all_data(groups):
         time_elapsed = current_test - float(last_update)
 
         if time_elapsed > update_cadence and update_cadence > 0:
-            notify_slack(SLACK_WEBHOOK, summary)
+            notify_channels(WEBHOOKS, summary)
             print(summary)
 
             # Update group info
@@ -945,9 +954,13 @@ def process_all_data(groups):
             with open(f"{SAMPLE_INFORMATION_PATH}/{group}.json", 'w') as f:
                 json.dump(group_info, f, indent=4)
 
-def notify_slack(webhook, message):
-    payload = {'text': message}
-    requests.post(webhook, json=payload)
+def notify_channels(webhooks, message):
+    payload = {'text': message,
+               'content': message}
+    for webhook in webhooks:
+        if webhook == "":
+            continue
+        requests.post(webhook, json=payload)
 
 def setup_folders_and_gitignore():
     # Check that all data folders exist and add necessary folders to gitignore
@@ -961,6 +974,9 @@ def setup_folders_and_gitignore():
 
     # Add slack information
     ignore_lines.append("test_information/slack.json")
+
+    # Add discord information
+    ignore_lines.append("test_information/discord.json")
 
     # Loop through all groups
     for group in os.listdir(SAMPLE_INFORMATION_PATH):
@@ -1021,8 +1037,8 @@ def git_commit_and_push(repo_path, consecutive_failures):
             print("Likely network error, no action needed")
         else:
             print(f"{consecutive_failures} consecutive failures, try restarting system")
-            notify_slack(SLACK_WEBHOOK, f"Git operation failed: {e}")
-            notify_slack(SLACK_WEBHOOK, f"{consecutive_failures} consecutive failures, try restarting system")
+            notify_channels(WEBHOOKS, f"Git operation failed: {e}")
+            notify_channels(WEBHOOKS, f"{consecutive_failures} consecutive failures, try restarting system")
 
     return consecutive_failures
 
@@ -1042,6 +1058,6 @@ if __name__ == '__main__':
         error_msg = f"Lifetime testing script crashed at {datetime.datetime.now()}:\n{traceback.format_exc()}"
 
         if "KeyboardInterrupt" not in error_msg:
-            notify_slack(SLACK_WEBHOOK, error_msg)
+            notify_channels(WEBHOOKS, error_msg)
 
         print(error_msg)        
