@@ -19,7 +19,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 249.4759615384778
+            "initial_i_max": 246.33576042278247
         },
         "G1X1-2": {
             "intan_channel": "d-022",
@@ -55,7 +55,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 400.0
+            "initial_i_max": 299.7534011815821
         },
         "G2X2S-2": {
             "intan_channel": "d-018",
@@ -64,7 +64,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 93.9807692307582
+            "initial_i_max": 87.2937062937123
         },
         "G2X2L-1": {
             "intan_channel": "d-017",
@@ -73,7 +73,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 313.80722891564176
+            "initial_i_max": 262.35209790209564
         },
         "G2X2L-2": {
             "intan_channel": "d-016",
@@ -82,7 +82,7 @@
             "pulse_width": 200,
             "pulse_interphase": 50,
             "pulse_frequency": 50,
-            "initial_i_max": 295.46234817821164
+            "initial_i_max": 256.699704142018
         }
     },
     "broken_devices": [],
@@ -96,7 +96,7 @@
             "VT-Intan"
         ],
         "cadence_hrs": 24,
-        "last_test": "2026-5-8 22:04"
+        "last_test": "2026-5-9 22:04"
     },
     "temp_sensors": {
         "1": {
