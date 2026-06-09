@@ -22,7 +22,7 @@
         "arduino_port": "COM4",
         "arduino_baudrate": 9600,
         "cadence_hrs": 24,
-        "last_test": "2026-6-7 22:07"
+        "last_test": "2026-6-8 22:07"
     },
     "temp_sensors": {
         "1": {
