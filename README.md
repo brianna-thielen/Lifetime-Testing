@@ -13,6 +13,7 @@ Instructions for starting testing:
 7. In the "Commands" tab, click "Connect"
 8. In the "Data Output" tab, under "Waveform Output", click "Connect"
 9. In Visual Studio Code, run the program run_lifetime_testing.py
+note: you need to be logged into the right github account to allow automatic push
 
 Instructions for adding new samples:
 1. Pause testing by pressing "ctrl-c"
