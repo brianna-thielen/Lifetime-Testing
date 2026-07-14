@@ -960,7 +960,10 @@ def notify_channels(webhooks, message):
     for webhook in webhooks:
         if webhook == "":
             continue
-        requests.post(webhook, json=payload)
+        try:
+            requests.post(webhook, json=payload)
+        except:
+            print(f"--- notification via webhook failed - check internet connection ---")
 
 def setup_folders_and_gitignore():
     # Check that all data folders exist and add necessary folders to gitignore

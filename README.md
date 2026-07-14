@@ -69,4 +69,6 @@ Instructions for setting up Github upload:
     }
 3. If push fails, ensure you're logged in by testing a push on the command line
 
+Instructions for setting up crash notifications are in support_functions/crash_monitoring_readme.txt
+
 Note: slack.json and github.json are automatically added to .gitignore for privacy
